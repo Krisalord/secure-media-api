@@ -5,12 +5,12 @@ ktor:
   deployment:
     port: 8080
   mongo:
-    uri: "mongodb+srv://admin:admin@secure-ai-notes-api.3kpghgz.mongodb.net/?appName=secure-ai-notes-api"
-    database: "secure-media-api"
+    uri: "your_mongo_uri"
+    database: "your_database_name"
   jwt:
     secret: "super-long-random-secret-change-me"
     issuer: "secure-media"
     audience: "secure-media-users"
     validityMs: 86400000
   openai:
-    apiKey: "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"
+    apiKey: ""
