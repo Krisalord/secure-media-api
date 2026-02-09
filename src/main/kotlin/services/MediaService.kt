@@ -1,74 +1,50 @@
 package io.github.krisalord.services
 
+import io.github.krisalord.errors.NotFoundException
 import io.github.krisalord.model.media.MediaModel
-import io.github.krisalord.model.media.MediaRequest
+import io.github.krisalord.model.media.dto.CreateMediaRequest
+import io.github.krisalord.model.media.dto.CreateMediaResponse
+import io.github.krisalord.model.media.dto.SearchMediaResponse
+import io.github.krisalord.model.media.dto.UpdateMediaRequest
+import io.github.krisalord.model.media.mappers.toCreateMediaResponse
+import io.github.krisalord.model.media.mappers.toSearchMediaResponse
 import io.github.krisalord.repositories.MediaRepository
-import io.github.krisalord.security.Sanitizer
-import io.github.krisalord.validation.MediaValidation
 import org.bson.types.ObjectId
-import java.time.LocalDateTime
 
-class MediaService(
-    private val mediaRepository: MediaRepository
-) {
-    fun createMedia(
-        userId: String,
-        request: MediaRequest
-    ): MediaModel {
-        val cleanTitle = Sanitizer.sanitizeText(request.title)
-
-        MediaValidation.validateMedia(request)
-
-        return mediaRepository.addMedia(
-            MediaModel(
-                id = ObjectId(),
-                userId = userId,
-                title = cleanTitle,
-                genres = request.genres,
-                rating = request.rating,
-                status = request.status
-            )
-        )
+class MediaService(private val mediaRepository: MediaRepository) {
+    suspend fun createMedia(userId: String, request: CreateMediaRequest): CreateMediaResponse {
+        val media = MediaModel.createNewMedia(userId, request)
+        val savedMedia = mediaRepository.addMedia(media)
+        return savedMedia.toCreateMediaResponse()
     }
 
-    fun getMediaByUserId(
-        userId: String
-    ): List<MediaModel> {
-        return mediaRepository.getAllMediaByUserId(userId)
+    suspend fun getMediaByUserId(userId: String): List<SearchMediaResponse> {
+        return mediaRepository
+            .getAllMediaByUserId(userId)
+            .map { it.toSearchMediaResponse() }
     }
 
-    fun getMediaByMediaId(
-        userId: String,
-        mediaId: String
-    ): MediaModel? {
-        return mediaRepository.getMediaByMediaId(ObjectId(mediaId), userId)
+    suspend fun getMediaByMediaId(userId: String, mediaId: String): SearchMediaResponse {
+        val media = mediaRepository.getMediaByMediaId(ObjectId(mediaId), userId)
+            ?: throw NotFoundException("Media not found")
+
+        return media.toSearchMediaResponse()
     }
 
-    fun updateMedia(
-        userId: String,
-        mediaId: String,
-        request: MediaRequest
-    ): Boolean {
-        MediaValidation.validateMedia(request)
-        val sanitizedTitle = Sanitizer.sanitizeText(request.title)
-
-        return mediaRepository.updateMedia(
-            MediaModel(
-                id = ObjectId(mediaId),
-                userId = userId,
-                title = sanitizedTitle,
-                genres = request.genres,
-                rating = request.rating,
-                status = request.status,
-                updatedAt = LocalDateTime.now(),
-            )
-        )
+    suspend fun updateMedia(userId: String, mediaId: String, request: UpdateMediaRequest) {
+        val media = MediaModel.updateExistingMedia(mediaId, userId, request)
+        val updated = mediaRepository.updateMedia(media)
+        if (!updated) {
+            throw NotFoundException("Media not found")
+        }
     }
 
-    fun deleteMedia(
-        userId: String,
-        mediaId: String
-    ): Boolean {
-        return mediaRepository.deleteMedia(ObjectId(mediaId), userId)
+    suspend fun deleteMedia(userId: String, mediaId: String) {
+        val deleted = mediaRepository.deleteMedia(ObjectId(mediaId), userId)
+        if (!deleted) {
+            throw NotFoundException("Media not found")
+        }
     }
+
+
 }

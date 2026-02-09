@@ -3,11 +3,11 @@ package io.github.krisalord.security
 import org.mindrot.jbcrypt.BCrypt
 
 class PasswordHashing {
-    fun hash(rawPassword: String): String {
-        return BCrypt.hashpw(rawPassword, BCrypt.gensalt())
+    fun hash(passwordBeforeHashing: String): String {
+        return BCrypt.hashpw(passwordBeforeHashing, BCrypt.gensalt())
     }
 
-    fun verify(rawPassword: String, hashed: String): Boolean {
-        return BCrypt.checkpw(rawPassword, hashed)
+    fun verify(passwordBeforeHashing: String, passwordHash: String): Boolean {
+        return BCrypt.checkpw(passwordBeforeHashing, passwordHash)
     }
 }

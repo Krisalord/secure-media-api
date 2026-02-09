@@ -1,12 +1,12 @@
 package io.github.krisalord.model.media
 
-import kotlinx.serialization.Serializable
+import io.github.krisalord.model.media.dto.CreateMediaRequest
+import io.github.krisalord.model.media.dto.UpdateMediaRequest
+import io.github.krisalord.security.Sanitizer
+import io.github.krisalord.validation.MediaValidation
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
-import java.time.LocalDate
 import java.time.LocalDateTime
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 data class MediaModel(
     @BsonId val id: ObjectId,
@@ -17,13 +17,35 @@ data class MediaModel(
     val status: WatchStatus,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now(),
-)
+) {
+    companion object {
+        fun createNewMedia(userId: String, createMediaRequest: CreateMediaRequest): MediaModel {
+            MediaValidation.validateCreateMedia(createMediaRequest)
+            val sanitizedTitle = Sanitizer.sanitizeText(createMediaRequest.title)
 
-fun MediaModel.toResponse(): MediaResponse =
-    MediaResponse(
-        id = this.id.toHexString(),
-        title = this.title,
-        genres = this.genres,
-        rating = this.rating,
-        status = this.status
-    )
+            return MediaModel(
+                id = ObjectId(),
+                userId = userId,
+                title = sanitizedTitle,
+                genres = createMediaRequest.genres,
+                rating = createMediaRequest.rating,
+                status = createMediaRequest.status
+            )
+        }
+
+        fun updateExistingMedia(mediaId: String, userId: String, updateMediaRequest: UpdateMediaRequest): MediaModel {
+            MediaValidation.validateUpdateMedia(updateMediaRequest)
+            val sanitizedTitle = Sanitizer.sanitizeText(updateMediaRequest.title)
+
+            return MediaModel(
+                id = ObjectId(mediaId),
+                userId = userId,
+                title = sanitizedTitle,
+                genres = updateMediaRequest.genres,
+                rating = updateMediaRequest.rating,
+                status = updateMediaRequest.status,
+                updatedAt = LocalDateTime.now()
+            )
+        }
+    }
+}

@@ -36,7 +36,7 @@ Media collections API built with Kotlin, Ktor & MongoDB.
     deployment:
       port: 8080
     mongo:
-      uri: "your_mongodb_url",
+      uri: "your_mongodb_url"
       database: "your_database_name"
     openai:
       apiKey: "your_openai_api_key"
@@ -75,7 +75,7 @@ POST /register
 Content-Type: application/json
 {
   "email": "user@example.com",
-  "password": "securePass123"
+  "passwordBeforeHash": "securePass123"
 }
 ```
 Response
@@ -93,7 +93,7 @@ POST /login
 Content-Type: application/json
 {
   "email": "user@example.com",
-  "password": "securePass123"
+  "passwordBeforeHash": "securePass123"
 }
 ```
 Response

@@ -80,14 +80,14 @@ fun Application.buildDependencies(jwtConfig: JwtConfig): Dependencies {
 
     // User
     val userRepository = UserRepository(
-        database.getCollection("users", UserModel::class.java)
+        database.getCollection("users")
     )
     val passwordHashing = PasswordHashing()
     val authService = AuthService(userRepository, passwordHashing, jwtConfig = jwtConfig)
 
     // Media
     val mediaRepository = MediaRepository(
-        database.getCollection("media", MediaModel::class.java)
+        database.getCollection("media")
     )
     val mediaService = MediaService(mediaRepository)
 

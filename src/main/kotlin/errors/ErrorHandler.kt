@@ -1,20 +1,21 @@
 package io.github.krisalord.errors
 
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.application.*
-import io.ktor.server.response.*
 import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 
 fun Application.installErrorHandler() {
     install(StatusPages) {
-        exception<Throwable> { call, _ ->
+        exception<Throwable> { call, e ->
+            call.application.log.error("Unhandled exception", e)
             call.respond(
                 HttpStatusCode.InternalServerError,
                 mapOf("error" to "Internal server error")
             )
         }
 
-        // Auth Errors
+        // Auth exceptions
 
         exception<AuthValidationException> { call, e ->
             call.respond(
@@ -44,7 +45,7 @@ fun Application.installErrorHandler() {
             )
         }
 
-        // Media Errors
+        // Media exceptions
 
         exception<MediaValidationException> { call, e ->
             call.respond(
@@ -74,7 +75,8 @@ fun Application.installErrorHandler() {
             )
         }
 
-        // OpenAi Errors
+        // OpenAi exceptions
+
         exception<RateLimitExceededException> { call, e ->
             call.respond(
                 HttpStatusCode.BadRequest,
@@ -83,6 +85,15 @@ fun Application.installErrorHandler() {
         }
 
         exception<AiRequestFailedException> { call, e ->
+            call.respond(
+                HttpStatusCode.BadRequest,
+                mapOf("error" to e.message)
+            )
+        }
+
+        // Database exceptions
+
+        exception<DatabaseException> { call, e ->
             call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to e.message)

@@ -20,6 +20,10 @@ application {
     mainClass = "io.ktor.server.netty.EngineMain"
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 dependencies {
     // KTOR SERVER
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -35,8 +39,9 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:${ktorVersion}")
 
     // DATABASE
-    implementation("org.litote.kmongo:kmongo:$kmongoVersion")
-    implementation("org.mongodb:mongodb-driver-sync:$mongo_version")
+    implementation("org.litote.kmongo:kmongo-coroutine:$kmongoVersion")
+    implementation("org.mongodb:mongodb-driver-reactivestreams:4.13.0") // required by kmongo-coroutine
+
 
     // SECURITY
     implementation("org.mindrot:jbcrypt:$bcryptVersion")
@@ -49,5 +54,7 @@ dependencies {
     testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+
 }

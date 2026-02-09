@@ -5,8 +5,8 @@ ktor:
   deployment:
     port: 8080
   mongo:
-    uri: "your_mongo_uri"
-    database: "your_database_name"
+    uri: ""
+    database: "secure-media-api"
   jwt:
     secret: "super-long-random-secret-change-me"
     issuer: "secure-media"
