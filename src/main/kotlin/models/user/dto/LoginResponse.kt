@@ -1,4 +1,4 @@
-package io.github.krisalord.model.user.dto
+package io.github.krisalord.models.user.dto
 
 import kotlinx.serialization.Serializable
 

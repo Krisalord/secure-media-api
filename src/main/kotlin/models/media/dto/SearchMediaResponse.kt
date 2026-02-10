@@ -1,7 +1,7 @@
-package io.github.krisalord.model.media.dto
+package io.github.krisalord.models.media.dto
 
-import io.github.krisalord.model.media.Genre
-import io.github.krisalord.model.media.WatchStatus
+import io.github.krisalord.models.media.Genre
+import io.github.krisalord.models.media.WatchStatus
 import kotlinx.serialization.Serializable
 
 @Serializable

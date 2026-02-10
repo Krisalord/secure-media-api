@@ -1,4 +1,4 @@
-package io.github.krisalord.validation
+package io.github.krisalord.validation.input
 
 import io.github.krisalord.errors.AuthValidationException
 

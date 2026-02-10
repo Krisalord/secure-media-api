@@ -1,9 +1,9 @@
-package io.github.krisalord.model.user
+package io.github.krisalord.models.user
 
-import io.github.krisalord.model.user.dto.RegisterRequest
+import io.github.krisalord.models.user.dto.RegisterRequest
 import io.github.krisalord.security.PasswordHashing
 import io.github.krisalord.security.Sanitizer
-import io.github.krisalord.validation.AuthValidation
+import io.github.krisalord.validation.input.AuthValidation
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 

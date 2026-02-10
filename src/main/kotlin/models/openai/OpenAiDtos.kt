@@ -1,4 +1,4 @@
-package io.github.krisalord.model.openai
+package io.github.krisalord.models.openai
 
 import kotlinx.serialization.Serializable
 

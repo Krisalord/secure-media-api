@@ -1,4 +1,4 @@
-package io.github.krisalord.model.media
+package io.github.krisalord.models.media
 
 import kotlinx.serialization.Serializable
 

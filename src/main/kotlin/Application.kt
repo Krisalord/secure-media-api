@@ -4,8 +4,6 @@ import io.github.krisalord.config.JwtConfig
 import io.github.krisalord.config.MongoConfig
 import io.github.krisalord.config.loadJwtSettings
 import io.github.krisalord.errors.installErrorHandler
-import io.github.krisalord.model.media.MediaModel
-import io.github.krisalord.model.user.UserModel
 import io.github.krisalord.repositories.MediaRepository
 import io.github.krisalord.repositories.UserRepository
 import io.github.krisalord.routes.aiRoutes
@@ -17,13 +15,12 @@ import io.github.krisalord.services.AiClient
 import io.github.krisalord.services.AiService
 import io.github.krisalord.services.AuthService
 import io.github.krisalord.services.MediaService
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.jwt.jwt
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.routing.routing
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
 fun Application.module() {

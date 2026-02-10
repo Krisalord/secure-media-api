@@ -1,6 +1,6 @@
 package io.github.krisalord.repositories
 
-import io.github.krisalord.model.user.UserModel
+import io.github.krisalord.models.user.UserModel
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.eq
 

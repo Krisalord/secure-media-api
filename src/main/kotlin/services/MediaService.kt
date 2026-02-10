@@ -1,13 +1,13 @@
 package io.github.krisalord.services
 
 import io.github.krisalord.errors.NotFoundException
-import io.github.krisalord.model.media.MediaModel
-import io.github.krisalord.model.media.dto.CreateMediaRequest
-import io.github.krisalord.model.media.dto.CreateMediaResponse
-import io.github.krisalord.model.media.dto.SearchMediaResponse
-import io.github.krisalord.model.media.dto.UpdateMediaRequest
-import io.github.krisalord.model.media.mappers.toCreateMediaResponse
-import io.github.krisalord.model.media.mappers.toSearchMediaResponse
+import io.github.krisalord.models.media.MediaModel
+import io.github.krisalord.models.media.mappers.toCreateMediaResponse
+import io.github.krisalord.models.media.mappers.toSearchMediaResponse
+import io.github.krisalord.models.media.dto.CreateMediaRequest
+import io.github.krisalord.models.media.dto.CreateMediaResponse
+import io.github.krisalord.models.media.dto.SearchMediaResponse
+import io.github.krisalord.models.media.dto.UpdateMediaRequest
 import io.github.krisalord.repositories.MediaRepository
 import org.bson.types.ObjectId
 

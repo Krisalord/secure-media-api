@@ -1,7 +1,7 @@
 package validation
 
 import io.github.krisalord.errors.AuthValidationException
-import io.github.krisalord.validation.AuthValidation
+import io.github.krisalord.validation.input.AuthValidation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

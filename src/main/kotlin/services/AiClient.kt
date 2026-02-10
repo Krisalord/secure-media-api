@@ -1,16 +1,16 @@
 package io.github.krisalord.services
 
 import io.github.krisalord.errors.AiRequestFailedException
-import io.github.krisalord.model.openai.OpenAiMessage
-import io.github.krisalord.model.openai.OpenAiRequest
-import io.github.krisalord.model.openai.OpenAiResponse
+import io.github.krisalord.models.openai.OpenAiMessage
+import io.github.krisalord.models.openai.OpenAiRequest
+import io.github.krisalord.models.openai.OpenAiResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
 

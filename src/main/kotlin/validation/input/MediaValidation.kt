@@ -1,8 +1,8 @@
-package io.github.krisalord.validation
+package io.github.krisalord.validation.input
 
 import io.github.krisalord.errors.MediaValidationException
-import io.github.krisalord.model.media.dto.CreateMediaRequest
-import io.github.krisalord.model.media.dto.UpdateMediaRequest
+import io.github.krisalord.models.media.dto.CreateMediaRequest
+import io.github.krisalord.models.media.dto.UpdateMediaRequest
 
 object MediaValidation{
     fun validateCreateMedia(request: CreateMediaRequest) {

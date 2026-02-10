@@ -1,7 +1,7 @@
 package io.github.krisalord.routes
 
-import io.github.krisalord.model.media.dto.CreateMediaRequest
-import io.github.krisalord.model.media.dto.UpdateMediaRequest
+import io.github.krisalord.models.media.dto.CreateMediaRequest
+import io.github.krisalord.models.media.dto.UpdateMediaRequest
 import io.github.krisalord.services.MediaService
 import io.ktor.http.*
 import io.ktor.server.auth.*

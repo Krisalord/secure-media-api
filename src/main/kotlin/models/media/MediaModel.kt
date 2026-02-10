@@ -1,9 +1,9 @@
-package io.github.krisalord.model.media
+package io.github.krisalord.models.media
 
-import io.github.krisalord.model.media.dto.CreateMediaRequest
-import io.github.krisalord.model.media.dto.UpdateMediaRequest
+import io.github.krisalord.models.media.dto.CreateMediaRequest
+import io.github.krisalord.models.media.dto.UpdateMediaRequest
 import io.github.krisalord.security.Sanitizer
-import io.github.krisalord.validation.MediaValidation
+import io.github.krisalord.validation.input.MediaValidation
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 import java.time.LocalDateTime

@@ -1,7 +1,7 @@
 package io.github.krisalord.repositories
 
 import com.mongodb.client.model.Filters
-import io.github.krisalord.model.media.MediaModel
+import io.github.krisalord.models.media.MediaModel
 import org.bson.types.ObjectId
 import org.litote.kmongo.coroutine.CoroutineCollection
 

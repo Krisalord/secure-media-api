@@ -4,7 +4,7 @@ import io.github.krisalord.errors.MediaValidationException
 import io.github.krisalord.model.media.Genre
 import io.github.krisalord.model.media.WatchStatus
 import io.github.krisalord.model.media.dto.CreateMediaRequest
-import io.github.krisalord.validation.MediaValidation
+import io.github.krisalord.validation.input.MediaValidation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
