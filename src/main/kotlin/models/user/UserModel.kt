@@ -13,16 +13,16 @@ data class UserModel(
     val passwordHash: String
 ) {
     companion object {
-        fun createNewUser(registerRequest: RegisterRequest, hasher: PasswordHashing) : UserModel {
-            val sanitizedEmail = Sanitizer.sanitizeEmail(registerRequest.email)
+        fun createNewUser(request: RegisterRequest, hasher: PasswordHashing) : UserModel {
+            val sanitizedEmail = Sanitizer.sanitizeEmail(request.email)
 
             AuthValidation.validateEmail(sanitizedEmail)
-            AuthValidation.validatePassword(registerRequest.passwordBeforeHash)
+            AuthValidation.validatePassword(request.passwordBeforeHash)
 
             return UserModel(
                 id = ObjectId(),
                 email = sanitizedEmail,
-                passwordHash = hasher.hash(registerRequest.passwordBeforeHash)
+                passwordHash = hasher.hash(request.passwordBeforeHash)
             )
         }
     }

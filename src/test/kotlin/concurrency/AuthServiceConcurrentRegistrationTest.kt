@@ -3,8 +3,8 @@ package concurrency
 import io.github.krisalord.config.JwtConfig
 import io.github.krisalord.config.JwtSettings
 import io.github.krisalord.errors.UserAlreadyExistsException
-import io.github.krisalord.model.user.UserModel
-import io.github.krisalord.model.user.dto.RegisterRequest
+import io.github.krisalord.models.user.UserModel
+import io.github.krisalord.models.user.dto.RegisterRequest
 import io.github.krisalord.repositories.UserRepository
 import io.github.krisalord.security.PasswordHashing
 import io.github.krisalord.services.AuthService

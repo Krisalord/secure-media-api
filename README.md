@@ -27,24 +27,36 @@ Media collections API built with Kotlin, Ktor & MongoDB.
   git clone https://github.com/krisalord/secure-media-api.git
   cd secure-media-api
 ```
-2. Set your config in application.yaml
-```yaml
-  ktor:
-    application:
-    modules:
-      - io.github.krisalord.ApplicationKt.module
-    deployment:
-      port: 8080
-    mongo:
-      uri: "your_mongodb_url"
-      database: "your_database_name"
-    openai:
-      apiKey: "your_openai_api_key"
-    jwt:
-      secret: "your-secret-key"
-      issuer: "secure-media-api"
-      audience: "secure-media-users"
-      realm: "secure-media"
+2. Create your config file
+
+`.conf` files are gitignored. You must create `src/main/resources/application.conf` manually.
+
+``` hocon 
+ktor {
+application {
+modules = [ io.github.krisalord.ApplicationKt.module ]
+}
+
+    deployment {
+        port = 8080
+    }
+
+    mongo {
+        uri = "YOUR_MONGO_URI"
+        database = "secure-media-api"
+    }
+
+    jwt {
+        secret = "YOUR_SECRET_KEY"
+        issuer = "secure-media"
+        audience = "secure-media-users"
+        validityMs = 86400000
+    }
+
+    openai {
+        apiKey = "YOUR_OPENAI_API_KEY"
+    }
+}
 ```
 3. Run
 ```bash
@@ -63,8 +75,6 @@ The app requires:
 Optional: (required for AI suggestion to work)
 
 - `ktor.openai.apiKey` — OpenAI API key for AI suggestion
-
-You can set these in `application.yaml`
 
 ## 5 Example Requests
 

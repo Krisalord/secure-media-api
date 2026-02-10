@@ -6,9 +6,9 @@ import io.github.krisalord.config.JwtConfig
 import io.github.krisalord.errors.InvalidPasswordException
 import io.github.krisalord.errors.UserAlreadyExistsException
 import io.github.krisalord.errors.UserNotFoundException
-import io.github.krisalord.model.user.UserModel
-import io.github.krisalord.model.user.dto.LoginRequest
-import io.github.krisalord.model.user.dto.RegisterRequest
+import io.github.krisalord.models.user.UserModel
+import io.github.krisalord.models.user.dto.LoginRequest
+import io.github.krisalord.models.user.dto.RegisterRequest
 import io.github.krisalord.repositories.UserRepository
 import io.github.krisalord.security.PasswordHashing
 import io.github.krisalord.services.AuthService
