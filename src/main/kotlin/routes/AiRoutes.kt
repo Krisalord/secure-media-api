@@ -1,10 +1,9 @@
 package io.github.krisalord.routes
 
 import io.github.krisalord.services.AiService
-import io.ktor.server.auth.authenticate
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.post
+import io.ktor.server.auth.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Route.aiRoutes(aiService: AiService?) {
     if (aiService == null) return
@@ -16,5 +15,4 @@ fun Route.aiRoutes(aiService: AiService?) {
             call.respond(mapOf("suggestion" to suggestion))
         }
     }
-
 }

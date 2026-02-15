@@ -1,6 +1,4 @@
-val kotlin_version: String by project
 val logback_version: String by project
-val mongo_version: String by project
 
 val ktorVersion = "3.3.2"
 val kmongoVersion = "5.2.0"
@@ -40,7 +38,7 @@ dependencies {
 
     // DATABASE
     implementation("org.litote.kmongo:kmongo-coroutine:$kmongoVersion")
-    implementation("org.mongodb:mongodb-driver-reactivestreams:4.13.0") // required by kmongo-coroutine
+    implementation("org.mongodb:mongodb-driver-reactivestreams:4.13.0")
 
 
     // SECURITY
@@ -54,7 +52,5 @@ dependencies {
     testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
-
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-
 }
