@@ -15,7 +15,7 @@ import io.github.krisalord.models.user.mappers.toRegisterResponse
 import io.github.krisalord.repositories.UserRepository
 import io.github.krisalord.security.PasswordHashing
 import io.github.krisalord.security.Sanitizer
-import io.github.krisalord.validation.input.AuthValidation
+import io.github.krisalord.validation.AuthValidation
 
 class AuthService(
     private val userRepository: UserRepository,

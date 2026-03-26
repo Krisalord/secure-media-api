@@ -2,12 +2,12 @@ package io.github.krisalord.services
 
 import io.github.krisalord.errors.NotFoundException
 import io.github.krisalord.models.media.MediaModel
-import io.github.krisalord.models.media.mappers.toCreateMediaResponse
-import io.github.krisalord.models.media.mappers.toSearchMediaResponse
 import io.github.krisalord.models.media.dto.CreateMediaRequest
 import io.github.krisalord.models.media.dto.CreateMediaResponse
 import io.github.krisalord.models.media.dto.SearchMediaResponse
 import io.github.krisalord.models.media.dto.UpdateMediaRequest
+import io.github.krisalord.models.media.mappers.toCreateMediaResponse
+import io.github.krisalord.models.media.mappers.toSearchMediaResponse
 import io.github.krisalord.repositories.MediaRepository
 import org.bson.types.ObjectId
 
@@ -15,13 +15,24 @@ class MediaService(private val mediaRepository: MediaRepository) {
     suspend fun createMedia(userId: String, request: CreateMediaRequest): CreateMediaResponse {
         val media = MediaModel.createNewMedia(userId, request)
         val savedMedia = mediaRepository.addMedia(media)
+
+        MediaCache.invalidateAllMediaOfUser(userId)
+
         return savedMedia.toCreateMediaResponse()
     }
 
     suspend fun getMediaByUserId(userId: String): List<SearchMediaResponse> {
-        return mediaRepository
+        MediaCache.getAllMediaOfUser(userId)?.let {
+            return it
+        }
+
+        val mediaList = mediaRepository
             .getAllMediaByUserId(userId)
             .map { it.toSearchMediaResponse() }
+
+        MediaCache.setAllMediaOfUser(userId, mediaList)
+
+        return mediaList
     }
 
     suspend fun getMediaByMediaId(userId: String, mediaId: String): SearchMediaResponse {
@@ -37,6 +48,8 @@ class MediaService(private val mediaRepository: MediaRepository) {
         if (!updated) {
             throw NotFoundException("Media not found")
         }
+
+        MediaCache.invalidateAllMediaOfUser(userId)
     }
 
     suspend fun deleteMedia(userId: String, mediaId: String) {
@@ -44,7 +57,7 @@ class MediaService(private val mediaRepository: MediaRepository) {
         if (!deleted) {
             throw NotFoundException("Media not found")
         }
+
+        MediaCache.invalidateAllMediaOfUser(userId)
     }
-
-
 }

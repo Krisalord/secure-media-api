@@ -11,7 +11,7 @@ class JwtConfigTest {
     private val settings = JwtSettings(
         secret = "test-secret",
         issuer = "test-issuer",
-        validityInMs = 1000L
+        validityInMs = 60000
     )
     private val jwtConfig = JwtConfig(settings)
 
@@ -20,7 +20,11 @@ class JwtConfigTest {
         val userId = "user123"
         val token = jwtConfig.generateToken(userId)
 
-        val decoded = jwtConfig.verifier().verify(token)
+        val decoded = jwtConfig.verifier()
+            .verify(token)
+
+        Thread.sleep(1200)
+
         assertEquals(settings.issuer, decoded.issuer)
         assertEquals(userId, decoded.getClaim("userId").asString())
     }
@@ -35,13 +39,20 @@ class JwtConfigTest {
 
     @Test
     fun `token should expire after validity period`() {
-        val userId = "user456"
-        val token = jwtConfig.generateToken(userId)
+        val shortSettings = JwtSettings(
+            secret = "test-secret",
+            issuer = "test-issuer",
+            validityInMs = 500
+        )
 
-        Thread.sleep(1200)
+        val shortJwtConfig = JwtConfig(shortSettings)
+
+        val token = shortJwtConfig.generateToken("user456")
+
+        Thread.sleep(1000)
 
         assertFailsWith<JWTVerificationException> {
-            jwtConfig.verifier().verify(token)
+            shortJwtConfig.verifier().verify(token)
         }
     }
 }

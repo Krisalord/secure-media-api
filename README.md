@@ -1,12 +1,12 @@
 # Secure Media API
 
-Media collections API built with Kotlin, Ktor & MongoDB.
+A backend API to manage media collections, built with Kotlin, Ktor, and MongoDB.
+Supports secure user authentication and full CRUD operations for media.
 
 ## 1 Features
 
 - User registration and login
 - CRUD Media management
-- AI-powered media recommendations
 - Input sanitization and validation
 - Centralized error handling
 - Modular, maintainable architecture
@@ -16,7 +16,6 @@ Media collections API built with Kotlin, Ktor & MongoDB.
 
 - **Language & Framework:** Kotlin, Ktor
 - **Database:** MongoDB (KMongo)
-- **AI Service:** OpenAI API
 - **Authentication:** JWT
 - **Security & Validation:** Input validation, BCrypt
 
@@ -52,10 +51,6 @@ modules = [ io.github.krisalord.ApplicationKt.module ]
         audience = "secure-media-users"
         validityMs = 86400000
     }
-
-    openai {
-        apiKey = "YOUR_OPENAI_API_KEY"
-    }
 }
 ```
 3. Run
@@ -71,10 +66,6 @@ The app requires:
 - `ktor.mongo.uri` — MongoDB connection string
 - `ktor.mongo.database` — Mongo database name
 - `ktor.jwt.secret` — Replace with strong secret
-
-Optional: (required for AI suggestion to work)
-
-- `ktor.openai.apiKey` — OpenAI API key for AI suggestion
 
 ## 5 Example Requests
 
@@ -198,7 +189,6 @@ Response
 HTTP 204 No Content
 ```
 
-
 ### 7 Delete Media
 Request
 ```bash
@@ -208,17 +198,4 @@ Authorization: Bearer JWT_TOKEN_HERE
 Response
 ```bash
 HTTP 204 No Content
-```
-
-### 8 Suggest new media with AI
-Request
-```bash
-POST /ai/suggest
-Authorization: Bearer JWT_TOKEN_HERE
-```
-Response
-```bash
-{
-  "suggestion": "Based on your watch history i can recommend these movies/shows: {recommendations}"
-}
 ```

@@ -6,20 +6,18 @@ import io.github.krisalord.config.loadJwtSettings
 import io.github.krisalord.errors.installErrorHandler
 import io.github.krisalord.repositories.MediaRepository
 import io.github.krisalord.repositories.UserRepository
-import io.github.krisalord.routes.aiRoutes
 import io.github.krisalord.routes.authRoutes
 import io.github.krisalord.routes.mediaRoutes
-import io.github.krisalord.security.AiRateLimiter
 import io.github.krisalord.security.PasswordHashing
-import io.github.krisalord.services.AiClient
-import io.github.krisalord.services.AiService
 import io.github.krisalord.services.AuthService
 import io.github.krisalord.services.MediaService
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
@@ -43,13 +41,23 @@ fun Application.registerRoutes(dependencies: Dependencies) {
     routing {
         authRoutes(dependencies.authService)
         mediaRoutes(dependencies.mediaService)
-        aiRoutes(dependencies.aiService)
     }
 }
 
 fun Application.installPlugins(jwtConfig: JwtConfig) {
     install(ContentNegotiation) {
         json(Json { prettyPrint = true; isLenient = true; ignoreUnknownKeys = true })
+    }
+
+    install(CORS) {
+        allowHost("localhost:5173")
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Authorization)
+        allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Delete)
+        allowCredentials = true
     }
 
     install(Authentication) {
@@ -69,7 +77,6 @@ fun Application.installPlugins(jwtConfig: JwtConfig) {
 class Dependencies(
     val authService: AuthService,
     val mediaService: MediaService,
-    val aiService: AiService? = null
 )
 
 fun Application.buildDependencies(jwtConfig: JwtConfig): Dependencies {
@@ -88,15 +95,6 @@ fun Application.buildDependencies(jwtConfig: JwtConfig): Dependencies {
     )
     val mediaService = MediaService(mediaRepository)
 
-    // Ai Service
-    val openAiKey = environment.config.propertyOrNull("ktor.openai.apiKey")?.getString()
-    val aiService = if (!openAiKey.isNullOrBlank()) {
-        val aiClient = AiClient(openAiKey)
-        val aiRateLimiter = AiRateLimiter(maxRequests = 5, windowSeconds = 60)
-        AiService(mediaRepository, aiClient, aiRateLimiter)
-    } else {
-        null
-    }
 
-    return Dependencies(authService, mediaService, aiService)
+    return Dependencies(authService, mediaService)
 }

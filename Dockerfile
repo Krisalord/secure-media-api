@@ -1,7 +1,6 @@
 FROM gradle:8.5-jdk21 AS build
 WORKDIR /app
 
-
 COPY gradlew .
 COPY gradle/ gradle/
 COPY build.gradle.kts .

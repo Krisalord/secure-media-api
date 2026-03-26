@@ -1,4 +1,4 @@
-package io.github.krisalord.validation.input
+package io.github.krisalord.validation
 
 import io.github.krisalord.errors.MediaValidationException
 import io.github.krisalord.models.media.dto.CreateMediaRequest
