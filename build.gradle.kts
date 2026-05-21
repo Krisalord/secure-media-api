@@ -35,7 +35,7 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("io.ktor:ktor-server-config-yaml:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:${ktorVersion}")
-
+    implementation("io.ktor:ktor-server-rate-limit:${ktorVersion}")
     // DATABASE
     implementation("org.litote.kmongo:kmongo-coroutine:$kmongoVersion")
     implementation("org.mongodb:mongodb-driver-reactivestreams:4.13.0")
