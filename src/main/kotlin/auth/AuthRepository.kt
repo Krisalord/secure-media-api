@@ -1,43 +1,58 @@
 package io.github.krisalord.auth
 
-import com.mongodb.MongoWriteException
-import com.mongodb.client.model.IndexOptions
-import com.mongodb.client.model.Indexes
-import io.github.krisalord.shared.DatabaseException
-import org.bson.types.ObjectId
-import org.litote.kmongo.coroutine.CoroutineCollection
-import org.litote.kmongo.eq
 
-class AuthRepository(
-    private val users: CoroutineCollection<UserModel>
-) {
-    suspend fun ensureIndexes() {
-        users.createIndex(
-            Indexes.ascending("email"),
-            IndexOptions()
-                .unique(true)
-                .name("user_email_unique")
-        )
-    }
-    suspend fun create(user: UserModel): UserModel {
+import io.github.krisalord.shared.DatabaseException
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import java.util.UUID
+
+class AuthRepository {
+    private fun toModel(row: ResultRow): UserModel = UserModel(
+        id = row[UsersTable.id].value.toString(),
+        email = row[UsersTable.email],
+        passwordHash = row[UsersTable.passwordHash],
+        role = row[UsersTable.role],
+        createdAt = row[UsersTable.createdAt],
+        updatedAt = row[UsersTable.updatedAt]
+    )
+
+    suspend fun create(user: UserModel): UserModel = newSuspendedTransaction {
         try {
-            users.insertOne(user)
-            return user
-        } catch (e: MongoWriteException) {
-            if (e.error.code == 11000) {
+            val insertedRow = UsersTable.insert {
+                if (user.id.isNotEmpty())
+                    it[id] = UUID.fromString(user.id)
+                it[email] = user.email
+                it[passwordHash] = user.passwordHash
+                it[role] = user.role
+            }
+            toModel(insertedRow.resultedValues?.first()!!)
+        } catch (e: ExposedSQLException) {
+            if (e.sqlState == "23505") {
                 throw UserAlreadyExistsException("This email is already registered")
             }
-            throw DatabaseException("Unexpected database error")
+            throw DatabaseException("Unexpected database error: ${e.message}")
         }
     }
 
-    suspend fun findByEmail(email: String): UserModel? =
-        users.findOne(UserModel::email eq email)
+    suspend fun findByEmail(email: String): UserModel? = newSuspendedTransaction {
+        UsersTable
+            .selectAll()
+            .where { UsersTable.email eq email }
+            .map { toModel(it) }
+            .singleOrNull()
+    }
 
-    suspend fun findById(userId: String): UserModel? {
-        if (!ObjectId.isValid(userId))
-            return null
+    suspend fun findById(userId: String): UserModel? = newSuspendedTransaction {
+        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return@newSuspendedTransaction null
 
-        return users.findOneById(ObjectId(userId))
+        UsersTable
+            .selectAll()
+            .where { UsersTable.id eq userUuid }
+            .map { toModel(it) }
+            .singleOrNull()
     }
 }

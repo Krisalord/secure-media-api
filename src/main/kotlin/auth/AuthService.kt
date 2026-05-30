@@ -56,7 +56,7 @@ class AuthService(
         if (session.expiresAt.isBefore(Instant.now()))
             throw UnauthorizedException("Session expired")
 
-        val revoked = refreshSessionRepository.revokeActiveById(session.id.toHexString())
+        val revoked = refreshSessionRepository.revokeActiveById(session.id)
         if (!revoked) {
             refreshSessionRepository.revokeAllByUserId(session.userId)
             throw UnauthorizedException("Token reuse detected")
@@ -77,7 +77,7 @@ class AuthService(
 
         if (session != null) {
             refreshSessionRepository.revokeActiveById(
-                session.id.toHexString()
+                session.id
             )
         }
     }
@@ -95,7 +95,7 @@ class AuthService(
         val refreshToken = refreshTokenService.generateRefreshToken()
 
         val refreshSession = refreshTokenService.buildRefreshSession(
-            user.id.toHexString(),
+            user.id,
             refreshToken,
             userAgent,
             ipAddress

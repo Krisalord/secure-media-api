@@ -9,7 +9,7 @@ fun ApplicationConfig.loadAppConfig(): AppConfig {
     val refresh = config("ktor.refreshToken")
     val cors = config("ktor.cors")
     val cookies = config("ktor.cookies")
-    val mongo = config("ktor.mongo")
+    val db = config("ktor.database")
 
     return AppConfig(
         auth = AuthConfig(
@@ -52,9 +52,12 @@ fun ApplicationConfig.loadAppConfig(): AppConfig {
                 .getString()
         ),
 
-        mongo = MongoSettings(
-            uri = mongo.property("uri").getString(),
-            database = mongo.property("database").getString()
+        database = DatabaseSettings(
+            driverClassName = db.property("driverClassName").getString(),
+            jdbcUrl = db.property("jdbcUrl").getString(),
+            username = db.property("username").getString(),
+            password = db.property("password").getString(),
+            maximumPoolSize = db.property("maximumPoolSize").getString().toInt()
         )
     )
 }

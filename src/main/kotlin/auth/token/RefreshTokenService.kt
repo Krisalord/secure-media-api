@@ -36,9 +36,12 @@ class RefreshTokenService(
         ipAddress: String?
     ): RefreshSessionModel {
         return RefreshSessionModel(
+            id = "",
             userId = userId,
             refreshTokenHash = hashRefreshToken(rawRefreshToken),
             expiresAt = refreshTokenExpiresAt(),
+            createdAt = Instant.now(),
+            isRevoked = false,
             userAgent = userAgent,
             ipAddress = ipAddress
         )

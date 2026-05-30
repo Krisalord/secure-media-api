@@ -19,7 +19,7 @@ class AccessTokenService (
             .withJWTId(UUID.randomUUID().toString())
             .withIssuer(accessTokenSettings.issuer)
             .withAudience(accessTokenSettings.audience)
-            .withSubject(user.id.toHexString())
+            .withSubject(user.id)
             .withClaim("role", user.role)
             .withIssuedAt(Date())
             .withExpiresAt(

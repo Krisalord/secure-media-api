@@ -1,7 +1,10 @@
 val logback_version: String by project
 
 val ktorVersion = "3.3.2"
-val kmongoVersion = "5.2.0"
+val exposedVersion = "1.3.0"
+val postgresVersion = "42.7.3"
+val hikariVersion = "5.1.0"
+val testcontainersVersion = "1.19.7"
 val bcryptVersion = "0.4"
 
 
@@ -36,10 +39,6 @@ dependencies {
     implementation("io.ktor:ktor-server-config-yaml:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:${ktorVersion}")
     implementation("io.ktor:ktor-server-rate-limit:${ktorVersion}")
-    // DATABASE
-    implementation("org.litote.kmongo:kmongo-coroutine:$kmongoVersion")
-    implementation("org.mongodb:mongodb-driver-reactivestreams:4.13.0")
-
 
     // SECURITY
     implementation("org.mindrot:jbcrypt:$bcryptVersion")
@@ -53,4 +52,16 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+
+    // DATABASE (SQL & POSTGRES)
+    implementation("org.jetbrains.exposed:exposed-core:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-dao:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-jdbc:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-java-time:${exposedVersion}")
+    implementation("org.postgresql:postgresql:${postgresVersion}")
+    implementation("com.zaxxer:HikariCP:${hikariVersion}")
+
+
+    testImplementation("org.testcontainers:junit-jupiter:${testcontainersVersion}")
+    testImplementation("org.testcontainers:postgresql:${testcontainersVersion}")
 }

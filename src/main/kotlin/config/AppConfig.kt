@@ -7,7 +7,7 @@ data class AppConfig(
     val auth: AuthConfig,
     val cors: CorsConfig,
     val cookies: CookiesConfig,
-    val mongo: MongoSettings
+    val database: DatabaseSettings
 )
 
 data class AuthConfig(
@@ -24,7 +24,10 @@ data class CorsConfig(
     val allowedFrontendHosts: List<String>
 )
 
-data class MongoSettings(
-    val uri: String,
-    val database: String
+data class DatabaseSettings(
+    val driverClassName: String,
+    val jdbcUrl: String,
+    val username: String,
+    val password: String,
+    val maximumPoolSize: Int
 )

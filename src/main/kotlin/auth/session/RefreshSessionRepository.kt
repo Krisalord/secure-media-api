@@ -1,73 +1,68 @@
 package io.github.krisalord.auth.session
 
-import com.mongodb.client.model.Filters.and
-import com.mongodb.client.model.IndexOptions
-import com.mongodb.client.model.Indexes
-import org.bson.types.ObjectId
-import org.litote.kmongo.coroutine.CoroutineCollection
-import org.litote.kmongo.eq
-import org.litote.kmongo.setValue
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
-import java.util.concurrent.TimeUnit
+import java.util.UUID
 
-class RefreshSessionRepository(
-    private val refreshSessions: CoroutineCollection<RefreshSessionModel>
-) {
-    suspend fun ensureIndexes() {
-        refreshSessions.createIndex(
-            Indexes.ascending("refreshTokenHash"),
-            IndexOptions()
-                .unique(true)
-                .name("refresh_token_hash_unique")
-        )
+class RefreshSessionRepository {
+    private fun toModel(row: ResultRow): RefreshSessionModel = RefreshSessionModel(
+        id = row[UserSessionTable.id].value.toString(),
+        userId = row[UserSessionTable.userId].toString(),
+        refreshTokenHash = row[UserSessionTable.refreshTokenHash],
+        expiresAt = row[UserSessionTable.expiresAt],
+        createdAt = row[UserSessionTable.createdAt],
+        isRevoked = row[UserSessionTable.isRevoked],
+        userAgent = row[UserSessionTable.userAgent],
+        ipAddress = row[UserSessionTable.ipAddress]
+    )
 
-        refreshSessions.createIndex(
-            Indexes.ascending("userId", "revokedAt", "expiresAt"),
-            IndexOptions()
-                .name("refresh_sessions_user_active_lookup_comp_idx")
-        )
+    suspend fun create(session: RefreshSessionModel): RefreshSessionModel = newSuspendedTransaction {
+        val insertedRow = UserSessionTable.insert {
+            if (session.id.isNotEmpty()) it[id] = UUID.fromString(session.id)
+            it[userId] = UUID.fromString(session.userId)
+            it[refreshTokenHash] = session.refreshTokenHash
+            it[expiresAt] = session.expiresAt
+            it[isRevoked] = session.isRevoked
+            it[userAgent] = session.userAgent
+            it[ipAddress] = session.ipAddress
+        }
 
-        refreshSessions.createIndex(
-            Indexes.ascending("expiresAt"),
-            IndexOptions()
-                .expireAfter(0, TimeUnit.DAYS)
-                .name("refresh_sessions_expire_at_ttl")
-        )
+        toModel(insertedRow.resultedValues?.first()!!)
     }
 
-
-    suspend fun create(session: RefreshSessionModel): RefreshSessionModel {
-        refreshSessions.insertOne(session)
-        return session
+    suspend fun findByTokenHash(refreshTokenHash: String): RefreshSessionModel? = newSuspendedTransaction {
+        UserSessionTable
+            .selectAll()
+            .where { UserSessionTable.refreshTokenHash eq refreshTokenHash }
+            .map { toModel(it) }
+            .singleOrNull()
     }
 
-    suspend fun findByTokenHash(refreshTokenHash: String): RefreshSessionModel? =
-        refreshSessions.findOne(
-            RefreshSessionModel::refreshTokenHash eq refreshTokenHash
-        )
+    suspend fun revokeActiveById(sessionId: String): Boolean = newSuspendedTransaction {
+        val uuid = runCatching { UUID.fromString(sessionId) }.getOrNull() ?: return@newSuspendedTransaction false
 
-    suspend fun revokeActiveById(sessionId: String): Boolean {
-        if (!ObjectId.isValid(sessionId))
-            return false
+        val updatedCount = UserSessionTable.update({
+            (UserSessionTable.id eq uuid) and (UserSessionTable.isRevoked eq false)
+        }) {
+            it[isRevoked] = true
+        }
 
-        val result = refreshSessions.updateOne(
-            and(
-                RefreshSessionModel::id eq ObjectId(sessionId),
-                RefreshSessionModel::revokedAt eq null,
-            ),
-            setValue(RefreshSessionModel::revokedAt, Instant.now())
-        )
-
-        return result.modifiedCount == 1L
+        updatedCount == 1
     }
 
-    suspend fun revokeAllByUserId(userId: String) {
-        refreshSessions.updateMany(
-            and(
-                RefreshSessionModel::userId eq userId,
-                RefreshSessionModel::revokedAt eq null,
-            ),
-            setValue(RefreshSessionModel::revokedAt, Instant.now())
-        )
+    suspend fun revokeAllByUserId(userId: String): Unit = newSuspendedTransaction {
+        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return@newSuspendedTransaction
+
+        UserSessionTable.update({
+            (UserSessionTable.userId eq userUuid) and (UserSessionTable.isRevoked eq false)
+        }) {
+            it[isRevoked] = true
+        }
     }
 }
