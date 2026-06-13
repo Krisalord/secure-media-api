@@ -1,7 +1,7 @@
 package io.github.krisalord.auth
 
 
-import io.github.krisalord.shared.DatabaseException
+import io.github.krisalord.plugins.DatabaseException
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException

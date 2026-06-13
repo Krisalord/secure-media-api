@@ -4,7 +4,7 @@ val ktorVersion = "3.3.2"
 val exposedVersion = "1.3.0"
 val postgresVersion = "42.7.3"
 val hikariVersion = "5.1.0"
-val testcontainersVersion = "1.19.7"
+val testcontainersVersion = "1.21.4"
 val bcryptVersion = "0.4"
 
 

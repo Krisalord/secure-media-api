@@ -1,10 +1,6 @@
 package io.github.krisalord.auth
 
-import io.github.krisalord.plugins.LOGIN_RATE_LIMIT
-import io.github.krisalord.plugins.REFRESH_RATE_LIMIT
-import io.github.krisalord.plugins.REGISTER_RATE_LIMIT
-import io.github.krisalord.plugins.USER_RATE_LIMIT
-import io.github.krisalord.shared.requireUserId
+import io.github.krisalord.plugins.*
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.*

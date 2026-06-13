@@ -1,6 +1,6 @@
 package io.github.krisalord.auth
 
-import io.github.krisalord.shared.AppException
+import io.github.krisalord.plugins.AppException
 import io.ktor.http.*
 
 class AuthValidationException(message: String) : AppException(message, HttpStatusCode.BadRequest)

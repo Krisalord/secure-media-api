@@ -1,12 +1,20 @@
 package io.github.krisalord.plugins
 
-import io.github.krisalord.shared.AppException
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.application.log
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
+
+open class AppException(message: String, val statusCode: HttpStatusCode)
+    : RuntimeException(message)
+
+class BadRequestException(message: String)
+    : AppException(message, HttpStatusCode.BadRequest)
+
+class DatabaseException(message: String)
+    : AppException(message, HttpStatusCode.InternalServerError)
 
 fun Application.configureErrorHandling() {
     install(StatusPages) {
