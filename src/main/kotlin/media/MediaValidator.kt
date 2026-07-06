@@ -16,8 +16,5 @@ object MediaValidator {
         if (request.rating !in 1..5) {
             throw InvalidMediaDataException("Rating must be an integer between 1 and 5.")
         }
-        if (Genre.fromString(request.genre) == null) {
-            throw InvalidMediaDataException("Unsupported or invalid genre: ${request.genre}.")
-        }
     }
 }

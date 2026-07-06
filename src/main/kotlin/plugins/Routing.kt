@@ -1,6 +1,8 @@
 package io.github.krisalord.plugins
 
 import io.github.krisalord.auth.authRoutes
+import io.github.krisalord.media.mediaRoutes
+import io.github.krisalord.recommendation.recommendationRoutes
 import io.github.krisalord.config.AppConfig
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.RateLimitName
@@ -16,8 +18,13 @@ fun Application.configureRouting(
             authRoutes(
                 authService = dependencies.authService,
                 webCookieSecure = config.cookies.secure,
-                webCookieSameSite = config.cookies.sameSite
+                webCookieSameSite = config.cookies.sameSite,
+                validityDays = config.auth.refreshToken.validityDays
             )
+
+            mediaRoutes(mediaService = dependencies.mediaService)
+
+            recommendationRoutes(recommendationService = dependencies.recommendationService)
         }
     }
 }

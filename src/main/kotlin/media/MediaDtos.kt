@@ -6,6 +6,22 @@ import kotlinx.serialization.Serializable
 data class CreateMediaRequest(
     val title: String,
     val mediaType: String,
+    val rating: Int
+)
+@Serializable
+data class MediaResponse(
+    val id: String,
+    val userId: String,
+    val title: String,
+    val mediaType: String,
     val rating: Int,
-    val genre: String
+    val watchedAt: String
+)
+fun WatchedMediaModel.toResponse(): MediaResponse = MediaResponse(
+    id = this.id,
+    userId = this.userId,
+    title = this.title,
+    mediaType = this.mediaType,
+    rating = this.rating,
+    watchedAt = this.watchedAt.toString()
 )

@@ -10,6 +10,7 @@ fun ApplicationConfig.loadAppConfig(): AppConfig {
     val cors = config("ktor.cors")
     val cookies = config("ktor.cookies")
     val db = config("ktor.database")
+    val ai = config("ktor.ai")
 
     return AppConfig(
         auth = AuthConfig(
@@ -28,28 +29,14 @@ fun ApplicationConfig.loadAppConfig(): AppConfig {
         ),
 
         cors = CorsConfig(
-            allowedFrontendHosts =
-                cors.propertyOrNull("allowedFrontendHosts")
-                    ?.getString()
-                    ?.split(",")
-                    ?.map { it.trim() }
-                    ?.filter { it.isNotBlank() }
-                    ?: listOf(
-                        "localhost:3000",
-                        "127.0.0.1:3000",
-                        "localhost:5173",
-                        "127.0.0.1:5173"
-                    )
+            allowedFrontendHosts = cors.propertyOrNull("allowedHosts")
+                ?.getList()
+                ?: listOf("localhost:3000", "127.0.0.1:3000", "localhost:5173", "127.0.0.1:5173")
         ),
 
         cookies = CookiesConfig(
-            secure = cookies.property("secure")
-                .getString()
-                .toBooleanStrictOrNull()
-                ?: false,
-
-            sameSite = cookies.property("sameSite")
-                .getString()
+            secure = cookies.property("secure").getString().toBooleanStrictOrNull() ?: false,
+            sameSite = cookies.property("sameSite").getString()
         ),
 
         database = DatabaseSettings(
@@ -58,6 +45,10 @@ fun ApplicationConfig.loadAppConfig(): AppConfig {
             username = db.property("username").getString(),
             password = db.property("password").getString(),
             maximumPoolSize = db.property("maximumPoolSize").getString().toInt()
+        ),
+
+        aiConfig = AiConfig(
+            geminiApiKey = ai.property("geminiApiKey").getString()
         )
     )
 }

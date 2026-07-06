@@ -18,14 +18,15 @@ fun Route.mediaRoutes(mediaService: MediaService) {
                 post {
                     val userId = call.requireUserId()
                     val request = call.receive<CreateMediaRequest>()
-                    val loggedMedia = mediaService.logMedia(userId, request)
-                    call.respond(HttpStatusCode.Created, loggedMedia)
+                    mediaService.logMedia(userId, request)
+                    call.respond(HttpStatusCode.Created)
                 }
 
                 get {
                     val userId = call.requireUserId()
                     val history = mediaService.getWatchHistory(userId)
-                    call.respond(HttpStatusCode.OK, history)
+                    val responseHistory = history.map { it.toResponse() }
+                    call.respond(HttpStatusCode.OK, responseHistory)
                 }
 
                 delete("/{id}") {

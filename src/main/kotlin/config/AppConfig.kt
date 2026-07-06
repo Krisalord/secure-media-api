@@ -7,7 +7,8 @@ data class AppConfig(
     val auth: AuthConfig,
     val cors: CorsConfig,
     val cookies: CookiesConfig,
-    val database: DatabaseSettings
+    val database: DatabaseSettings,
+    val aiConfig: AiConfig
 )
 
 data class AuthConfig(
@@ -30,4 +31,8 @@ data class DatabaseSettings(
     val username: String,
     val password: String,
     val maximumPoolSize: Int
+)
+
+data class AiConfig(
+    val geminiApiKey: String
 )

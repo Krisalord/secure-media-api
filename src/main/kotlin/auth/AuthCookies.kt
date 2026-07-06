@@ -6,7 +6,8 @@ object AuthCookies {
     fun refreshToken(
         value: String,
         secure: Boolean,
-        sameSite: String
+        sameSite: String,
+        validityDays: Long
     ): Cookie {
         return Cookie(
             name = "refresh_token",
@@ -14,7 +15,7 @@ object AuthCookies {
             httpOnly = true,
             secure = secure,
             path = "/",
-            maxAge = 60 * 60 * 24 * 30,
+            maxAge = (validityDays * 24 * 60 * 60).toInt(),
             extensions = mapOf(
                 "SameSite" to sameSite
             )

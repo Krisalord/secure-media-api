@@ -17,17 +17,15 @@ class MediaRepository {
         title = row[MediaTable.title],
         mediaType = row[MediaTable.mediaType],
         rating = row[MediaTable.rating],
-        genre = Genre.fromString(row[MediaTable.genre]) ?: throw IllegalArgumentException("Invalid genre in database"),
         watchedAt = row[MediaTable.watchedAt]
     )
 
-    suspend fun create(userId: String, title: String, mediaType: String, rating: Int, genre: Genre): WatchedMediaModel = newSuspendedTransaction {
+    suspend fun create(model: WatchedMediaModel): WatchedMediaModel = newSuspendedTransaction {
         val insertedRow = MediaTable.insert {
-            it[MediaTable.userId] = UUID.fromString(userId)
-            it[MediaTable.title] = title
-            it[MediaTable.mediaType] = mediaType
-            it[MediaTable.rating] = rating
-            it[MediaTable.genre] = genre.name
+            it[userId] = UUID.fromString(model.userId)
+            it[title] = model.title
+            it[mediaType] = model.mediaType
+            it[rating] = model.rating
         }
         toModel(insertedRow.resultedValues?.first()!!)
     }

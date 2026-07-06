@@ -12,7 +12,8 @@ import io.ktor.server.routing.*
 fun Route.authRoutes(
     authService: AuthService,
     webCookieSecure: Boolean,
-    webCookieSameSite: String
+    webCookieSameSite: String,
+    validityDays: Long
 ) {
     route("/api") {
         route("/v1") {
@@ -34,7 +35,14 @@ fun Route.authRoutes(
 
                         val (response, refreshToken) = authService.login(request, userAgent, ipAddress)
 
-                        call.response.cookies.append(AuthCookies.refreshToken(refreshToken, webCookieSecure, webCookieSameSite))
+                        call.response.cookies.append(
+                            AuthCookies.refreshToken(
+                                value = refreshToken,
+                                secure = webCookieSecure,
+                                sameSite = webCookieSameSite,
+                                validityDays = validityDays
+                            )
+                        )
 
                         call.respond(HttpStatusCode.OK, response)
                     }
@@ -50,7 +58,14 @@ fun Route.authRoutes(
 
                         val (response, refreshToken) = authService.refresh(oldRefreshToken, userAgent, ipAddress)
 
-                        call.response.cookies.append(AuthCookies.refreshToken(refreshToken, webCookieSecure, webCookieSameSite))
+                        call.response.cookies.append(
+                            AuthCookies.refreshToken(
+                                value = refreshToken,
+                                secure = webCookieSecure,
+                                sameSite = webCookieSameSite,
+                                validityDays = validityDays
+                            )
+                        )
 
                         call.respond(HttpStatusCode.OK, response)
                     }

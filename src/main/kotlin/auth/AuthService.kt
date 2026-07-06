@@ -5,17 +5,17 @@ import io.github.krisalord.auth.PasswordHashing
 import io.github.krisalord.auth.session.RefreshSessionRepository
 import io.github.krisalord.auth.token.RefreshTokenService
 import java.time.Instant
-import kotlin.text.trim
 
 class AuthService(
     private val authRepository: AuthRepository,
     private val accessTokenService: AccessTokenService,
     private val refreshTokenService: RefreshTokenService,
-    private val refreshSessionRepository: RefreshSessionRepository
+    private val refreshSessionRepository: RefreshSessionRepository,
+    private val reuseDetectionEnabled: Boolean
 ) {
     suspend fun register(request: RegisterRequest) {
+        AuthRequestValidator.validateCredentials(request.email, request.password)
         val sanitizedEmail = request.email.trim().lowercase()
-        AuthRequestValidator.validateCredentials(sanitizedEmail, request.password)
 
         val passwordHash = PasswordHashing.hash(request.password)
         val newUser = UserModel.create(sanitizedEmail, passwordHash)
@@ -58,17 +58,17 @@ class AuthService(
 
         val revoked = refreshSessionRepository.revokeActiveById(session.id)
         if (!revoked) {
-            refreshSessionRepository.revokeAllByUserId(session.userId)
+            if (reuseDetectionEnabled) {
+                refreshSessionRepository.revokeAllByUserId(session.userId)
+            }
             throw UnauthorizedException("Token reuse detected")
         }
 
         val user = authRepository.findById(session.userId)
             ?: throw UnauthorizedException("User not found")
 
-
         return issueTokens(user, userAgent, ipAddress)
     }
-
 
     suspend fun logout(refreshToken: String) {
         val refreshTokenHash = refreshTokenService.hashRefreshToken(refreshToken)
@@ -76,12 +76,9 @@ class AuthService(
         val session = refreshSessionRepository.findByTokenHash(refreshTokenHash)
 
         if (session != null) {
-            refreshSessionRepository.revokeActiveById(
-                session.id
-            )
+            refreshSessionRepository.revokeActiveById(session.id)
         }
     }
-
 
     suspend fun logoutAll(userId: String) {
         refreshSessionRepository.revokeAllByUserId(userId)

@@ -4,14 +4,18 @@ class MediaService(private val mediaRepository: MediaRepository) {
 
     suspend fun logMedia(userId: String, request: CreateMediaRequest): WatchedMediaModel {
         MediaValidator.validateLogRequest(request)
+        val sanitizedTitle = request.title.trim().replace(Regex("\\s+"), " ")
 
-        return mediaRepository.create(
+
+
+        val mediaToCreate = WatchedMediaModel.create(
             userId = userId,
-            title = request.title.trim(),
-            mediaType = request.mediaType.uppercase(),
-            rating = request.rating,
-            genre = Genre.fromString(request.genre)!!
+            sanitizedTitle = sanitizedTitle,
+            rawMediaType = request.mediaType,
+            rating = request.rating
         )
+
+        return mediaRepository.create(mediaToCreate)
     }
 
     suspend fun getWatchHistory(userId: String): List<WatchedMediaModel> {
