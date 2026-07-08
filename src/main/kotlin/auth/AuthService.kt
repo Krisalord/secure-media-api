@@ -1,7 +1,6 @@
 package io.github.krisalord.auth
 
 import io.github.krisalord.auth.token.AccessTokenService
-import io.github.krisalord.auth.PasswordHashing
 import io.github.krisalord.auth.session.RefreshSessionRepository
 import io.github.krisalord.auth.token.RefreshTokenService
 import java.time.Instant
@@ -14,7 +13,7 @@ class AuthService(
     private val reuseDetectionEnabled: Boolean
 ) {
     suspend fun register(request: RegisterRequest) {
-        AuthRequestValidator.validateCredentials(request.email, request.password)
+        AuthValidator.validateCredentials(request.email, request.password)
         val sanitizedEmail = request.email.trim().lowercase()
 
         val passwordHash = PasswordHashing.hash(request.password)
@@ -29,7 +28,7 @@ class AuthService(
         ipAddress: String?
     ): Pair<AuthTokenResponse, String> {
         val sanitizedEmail = request.email.trim().lowercase()
-        AuthRequestValidator.validateCredentials(sanitizedEmail, request.password)
+        AuthValidator.validateCredentials(sanitizedEmail, request.password)
 
         val user = authRepository.findByEmail(sanitizedEmail)
             ?: throw UnauthorizedException("Invalid credentials")

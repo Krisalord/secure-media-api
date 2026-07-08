@@ -15,7 +15,7 @@ class PasswordHashingTest {
         val hash = PasswordHashing.hash(password)
 
         assertNotEquals(password, hash)
-        assertTrue(hash.startsWith("$2a$") || hash.startsWith("$2b$")) // Confirms standard BCrypt signature
+        assertTrue(hash.startsWith("$2a$") || hash.startsWith("$2b$"))
     }
 
     @Test
@@ -46,6 +46,6 @@ class PasswordHashingTest {
         val hashOne = PasswordHashing.hash(password)
         val hashTwo = PasswordHashing.hash(password)
 
-        assertNotEquals(hashOne, hashTwo) // Proves BCrypt is auto-generating random salts per execution
+        assertNotEquals(hashOne, hashTwo)
     }
 }

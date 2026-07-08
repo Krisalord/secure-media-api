@@ -1,6 +1,6 @@
 package io.github.krisalord.auth
 
-object AuthRequestValidator {
+object AuthValidator {
     fun validateCredentials(email: String, password: String) {
         validateEmail(email)
         validatePassword(password)
