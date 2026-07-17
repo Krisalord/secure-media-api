@@ -7,6 +7,7 @@ import io.github.krisalord.config.AppConfig
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.ratelimit.rateLimit
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 
 fun Application.configureRouting(
@@ -14,6 +15,9 @@ fun Application.configureRouting(
     config: AppConfig
 ) {
     routing {
+        get("/debug-ping") {
+            call.respondText("Routing is definitely active!")
+        }
         rateLimit(RateLimitName(GLOBAL_RATE_LIMIT)) {
             authRoutes(
                 authService = dependencies.authService,
