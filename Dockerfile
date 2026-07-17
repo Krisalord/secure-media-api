@@ -18,4 +18,4 @@ WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["sh", "-c", "java -jar app.jar -port=${PORT:-8080}"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
