@@ -5,6 +5,12 @@ import io.github.krisalord.config.loadAppConfig
 import io.github.krisalord.plugins.*
 import io.ktor.server.application.*
 
+
+
+fun main(args: Array<String>) {
+    io.ktor.server.netty.EngineMain.main(args)
+}
+
 fun Application.module() {
     val config = environment.config.loadAppConfig()
 
