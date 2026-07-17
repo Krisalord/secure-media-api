@@ -21,6 +21,8 @@ fun Application.configureCors() {
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
+
+        allowHost("localhost:5173")
     }
 }
 
