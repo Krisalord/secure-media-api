@@ -8,6 +8,8 @@ COPY settings.gradle.kts .
 COPY gradle.properties .
 COPY src/ src/
 
+RUN chmod +x ./gradlew
+
 RUN ./gradlew build --no-daemon -x test
 
 FROM eclipse-temurin:21-jre
