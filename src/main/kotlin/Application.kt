@@ -34,3 +34,7 @@ fun Application.module() {
     configureRouting(dependencies, config)
     configureCors()
 }
+
+fun main(args: Array<String>) {
+    io.ktor.server.netty.EngineMain.main(args)
+}
