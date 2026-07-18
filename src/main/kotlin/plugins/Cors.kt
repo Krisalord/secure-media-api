@@ -23,6 +23,7 @@ fun Application.configureCors() {
         allowMethod(HttpMethod.Delete)
 
         allowHost("localhost:5173")
+        allowHost("https://my-awesome-frontend.onrender.com")
     }
 }
 
