@@ -8,9 +8,7 @@ import io.github.krisalord.auth.token.RefreshTokenHashing
 import io.github.krisalord.auth.token.RefreshTokenService
 import io.github.krisalord.config.AppConfig
 import io.github.krisalord.favorite_actors.FavoriteActorRepository
-import io.github.krisalord.favorite_actors.FavoriteActorResponse
 import io.github.krisalord.favorite_actors.FavoriteActorService
-import io.github.krisalord.favorite_actors.FavoriteActorValidator
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.MediaService
 import io.github.krisalord.recommendation.RecommendationService
@@ -58,8 +56,14 @@ fun Application.buildDependencies(
         reuseDetectionEnabled = config.auth.refreshToken.reuseDetectionEnabled
     )
 
-    val mediaService = MediaService(mediaRepository = mediaRepository)
+    val mediaService = MediaService(
+        mediaRepository = mediaRepository,
+        httpClient = httpClient,
+        tmdbApiKey = config.tmdbConfig.tmdbApiKey
+    )
+
     val favoriteActorService = FavoriteActorService(favoriteActorRepository = favoriteActorRepository)
+
     val recommendationService = RecommendationService(
         mediaRepository = mediaRepository,
         httpClient = httpClient,

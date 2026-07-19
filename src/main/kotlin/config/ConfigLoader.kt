@@ -11,6 +11,7 @@ fun ApplicationConfig.loadAppConfig(): AppConfig {
     val cookies = config("ktor.cookies")
     val db = config("ktor.database")
     val ai = config("ktor.ai")
+    val tmdb = config("ktor.tmdb")
 
     return AppConfig(
         auth = AuthConfig(
@@ -49,6 +50,10 @@ fun ApplicationConfig.loadAppConfig(): AppConfig {
 
         aiConfig = AiConfig(
             geminiApiKey = ai.property("geminiApiKey").getString()
+        ),
+
+        tmdbConfig = TmdbConfig(
+            tmdbApiKey = tmdb.property("tmdbApiKey").getString()
         )
     )
 }

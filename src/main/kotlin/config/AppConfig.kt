@@ -8,7 +8,8 @@ data class AppConfig(
     val cors: CorsConfig,
     val cookies: CookiesConfig,
     val database: DatabaseSettings,
-    val aiConfig: AiConfig
+    val aiConfig: AiConfig,
+    val tmdbConfig: TmdbConfig
 )
 
 data class AuthConfig(
@@ -35,4 +36,8 @@ data class DatabaseSettings(
 
 data class AiConfig(
     val geminiApiKey: String
+)
+
+data class TmdbConfig(
+    val tmdbApiKey: String
 )

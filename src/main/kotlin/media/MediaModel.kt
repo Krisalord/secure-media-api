@@ -13,6 +13,7 @@ object MediaTable : UUIDTable("media") {
     val mediaType = varchar("media_type", 50)
     val rating = integer("rating")
     val watchedAt = timestamp("watched_at").defaultExpression(CurrentTimestamp)
+    val posterUrl = varchar("poster_url", 500).nullable()
 }
 
 data class WatchedMediaModel(
@@ -21,7 +22,8 @@ data class WatchedMediaModel(
     val title: String,
     val mediaType: String,
     val rating: Int,
-    val watchedAt: Instant
+    val watchedAt: Instant,
+    val posterUrl: String?
 ) {
     companion object {
         fun create(
@@ -29,6 +31,7 @@ data class WatchedMediaModel(
             sanitizedTitle: String,
             rawMediaType: String,
             rating: Int,
+            posterUrl: String?
         ): WatchedMediaModel {
             return WatchedMediaModel(
                 id = "",
@@ -36,7 +39,8 @@ data class WatchedMediaModel(
                 title = sanitizedTitle,
                 mediaType = rawMediaType,
                 rating = rating,
-                watchedAt = Instant.now()
+                watchedAt = Instant.now(),
+                posterUrl = posterUrl
             )
         }
     }

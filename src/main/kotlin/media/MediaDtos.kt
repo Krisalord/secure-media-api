@@ -15,7 +15,8 @@ data class MediaResponse(
     val title: String,
     val mediaType: String,
     val rating: Int,
-    val watchedAt: String
+    val watchedAt: String,
+    val posterUrl: String? = null
 )
 fun WatchedMediaModel.toResponse(): MediaResponse = MediaResponse(
     id = this.id,

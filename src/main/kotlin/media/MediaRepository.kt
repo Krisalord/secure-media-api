@@ -17,7 +17,8 @@ class MediaRepository {
         title = row[MediaTable.title],
         mediaType = row[MediaTable.mediaType],
         rating = row[MediaTable.rating],
-        watchedAt = row[MediaTable.watchedAt]
+        watchedAt = row[MediaTable.watchedAt],
+        posterUrl = row[MediaTable.posterUrl]
     )
 
     suspend fun create(model: WatchedMediaModel): WatchedMediaModel = newSuspendedTransaction {
@@ -26,6 +27,7 @@ class MediaRepository {
             it[title] = model.title
             it[mediaType] = model.mediaType
             it[rating] = model.rating
+            it[posterUrl] = model.posterUrl
         }
         toModel(insertedRow.resultedValues?.first()!!)
     }
