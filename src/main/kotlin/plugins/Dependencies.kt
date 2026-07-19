@@ -7,6 +7,10 @@ import io.github.krisalord.auth.token.AccessTokenService
 import io.github.krisalord.auth.token.RefreshTokenHashing
 import io.github.krisalord.auth.token.RefreshTokenService
 import io.github.krisalord.config.AppConfig
+import io.github.krisalord.favorite_actors.FavoriteActorRepository
+import io.github.krisalord.favorite_actors.FavoriteActorResponse
+import io.github.krisalord.favorite_actors.FavoriteActorService
+import io.github.krisalord.favorite_actors.FavoriteActorValidator
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.MediaService
 import io.github.krisalord.recommendation.RecommendationService
@@ -20,6 +24,7 @@ class Dependencies(
     val authService: AuthService,
     val accessTokenService: AccessTokenService,
     val mediaService: MediaService,
+    val favoriteActorService: FavoriteActorService,
     val recommendationService: RecommendationService
 )
 
@@ -35,6 +40,7 @@ fun Application.buildDependencies(
     val authRepository = AuthRepository()
     val refreshSessionRepository = RefreshSessionRepository()
     val mediaRepository = MediaRepository()
+    val favoriteActorRepository = FavoriteActorRepository()
 
     val refreshTokenHashing = RefreshTokenHashing(config.auth.refreshToken.tokenHashPepper)
     val accessTokenService = AccessTokenService(config.auth.accessToken)
@@ -53,17 +59,20 @@ fun Application.buildDependencies(
     )
 
     val mediaService = MediaService(mediaRepository = mediaRepository)
-
+    val favoriteActorService = FavoriteActorService(favoriteActorRepository = favoriteActorRepository)
     val recommendationService = RecommendationService(
         mediaRepository = mediaRepository,
         httpClient = httpClient,
         geminiApiKey = config.aiConfig.geminiApiKey
     )
 
+
+
     return Dependencies(
         authService = authService,
         accessTokenService = accessTokenService,
         mediaService = mediaService,
-        recommendationService = recommendationService
+        recommendationService = recommendationService,
+        favoriteActorService = favoriteActorService
     )
 }

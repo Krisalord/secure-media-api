@@ -4,6 +4,7 @@ import io.github.krisalord.auth.authRoutes
 import io.github.krisalord.media.mediaRoutes
 import io.github.krisalord.recommendation.recommendationRoutes
 import io.github.krisalord.config.AppConfig
+import io.github.krisalord.favorite_actors.favoriteActorRoutes
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.ratelimit.rateLimit
@@ -29,6 +30,8 @@ fun Application.configureRouting(
             mediaRoutes(mediaService = dependencies.mediaService)
 
             recommendationRoutes(recommendationService = dependencies.recommendationService)
+
+            favoriteActorRoutes(favoriteActorService = dependencies.favoriteActorService)
         }
     }
 }

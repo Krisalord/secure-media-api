@@ -17,6 +17,7 @@ const val REFRESH_RATE_LIMIT = "refresh-rate-limit"
 const val USER_RATE_LIMIT = "user-rate-limit"
 const val MEDIA_RATE_LIMIT = "media-rate-limit"
 const val RECOMMENDATION_RATE_LIMIT = "recommendation-rate-limit"
+const val FAVORITE_ACTOR_RATE_LIMIT = "favorite-actor-rate-limit"
 
 fun Application.configureRateLimiting() {
     install(RateLimit) {
@@ -63,6 +64,13 @@ fun Application.configureRateLimiting() {
         }
 
         register(RateLimitName(RECOMMENDATION_RATE_LIMIT)) {
+            requestKey { call ->
+                call.principalUserIdOrIp()
+            }
+            rateLimiter(limit = 60, refillPeriod = 1.minutes)
+        }
+
+        register(RateLimitName(FAVORITE_ACTOR_RATE_LIMIT)) {
             requestKey { call ->
                 call.principalUserIdOrIp()
             }

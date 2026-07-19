@@ -36,57 +36,25 @@ This API uses a high-security dual-token architecture to protect users from XSS 
   cd secure-media-api
 ```
 
-2. Create your config file
+2. Set up .env
+
+The application relies on environment variables for secure configuration. You must create a .env file in the root directory of the project. The application.conf file will automatically read from this file during local development.
+
+Create a .env file and add the following configuration:
 
 `.conf` files are gitignored. You must create `src/main/resources/application.conf` manually.
 
 ``` hocon 
-ktor {
-  application {
-    modules = [ io.github.krisalord.ApplicationKt.module ]
-  }
-
-  deployment {
-    port = 8080
-  }
-
-  database {
-    driverClassName = "org.postgresql.Driver"
-    jdbcUrl = ""
-    username = ""
-    password = ""
-    maximumPoolSize = 10
-  }
-
-  jwt {
-    secret = "secret-jwt-signing-key"
-    issuer = ""
-    audience = "secure-media-api"
-    accessValidityMs = 120000
-  }
-
-  refreshToken {
-    validityDays: 7
-    reuseDetectionEnabled: true
-    maxSessionsPerUser: 5
-    tokenHashPepper = "separate-secret-for-refresh-token-hashing"
-  }
-
-  cors {
-    allowedHosts = [
-      
-    ]
-  }
-
-  cookies {
-    secure = false
-    sameSite = "Strict"
-  }
-
-  ai {
-    geminiApiKey = "your gemini api key"
-  }
-}
+PORT=8080
+DB_URL=jdbc:postgresql://localhost:5432/auth_dev_db
+DB_USER=dev_user
+DB_PASSWORD=dev_password
+JWT_SECRET=my-super-secret-local-jwt-key
+JWT_ISSUER=io.github.krisalord
+JWT_AUDIENCE=secure-media-api
+TOKEN_PEPPER=my-super-secret-local-pepper
+FRONTEND_URL=http://localhost:5173
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 3. Boot the database
