@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.krisalord.auth.UsersTable
 import io.github.krisalord.auth.session.UserSessionTable
+import io.github.krisalord.favorite_actors.FavoriteActorTable
 import io.github.krisalord.media.MediaTable
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -49,7 +50,7 @@ object DatabaseFactory {
         Database.connect(dataSource)
 
         transaction {
-            SchemaUtils.create(UsersTable, UserSessionTable, MediaTable)
+            SchemaUtils.create(UsersTable, UserSessionTable, MediaTable, FavoriteActorTable)
         }
 
         logger.info("PostgreSQL fully initialized and connected cleanly!")
