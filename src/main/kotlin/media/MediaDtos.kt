@@ -24,5 +24,6 @@ fun WatchedMediaModel.toResponse(): MediaResponse = MediaResponse(
     title = this.title,
     mediaType = this.mediaType,
     rating = this.rating,
-    watchedAt = this.watchedAt.toString()
+    watchedAt = this.watchedAt.toString(),
+    posterUrl = this.posterUrl
 )
