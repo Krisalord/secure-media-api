@@ -13,8 +13,13 @@ import org.slf4j.LoggerFactory
 
 object DatabaseFactory {
     private val logger = LoggerFactory.getLogger(javaClass)
-
+    private var isInitialized = false
     fun init(settings: DatabaseSettings) {
+        if (isInitialized) {
+            logger.info("Database already initialized, skipping reconnect.")
+            return
+        }
+
         val config = HikariConfig().apply {
             driverClassName = settings.driverClassName
             jdbcUrl = settings.jdbcUrl
@@ -54,5 +59,7 @@ object DatabaseFactory {
         }
 
         logger.info("PostgreSQL fully initialized and connected cleanly!")
+
+        isInitialized = true
     }
 }
