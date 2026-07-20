@@ -57,5 +57,6 @@ enum class PromptType {
     DEFAULT,
     ACTION_PACKED,
     BINGE_WORTHY,
-    CUSTOM
+    CUSTOM,
+    FAVORITE_ACTORS
 }

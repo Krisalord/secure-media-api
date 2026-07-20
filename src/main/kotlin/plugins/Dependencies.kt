@@ -66,11 +66,10 @@ fun Application.buildDependencies(
 
     val recommendationService = RecommendationService(
         mediaRepository = mediaRepository,
+        favoriteActorRepository = favoriteActorRepository,
         httpClient = httpClient,
         geminiApiKey = config.aiConfig.geminiApiKey
     )
-
-
 
     return Dependencies(
         authService = authService,
