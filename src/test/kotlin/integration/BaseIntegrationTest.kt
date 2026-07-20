@@ -43,9 +43,9 @@ abstract class BaseIntegrationTest {
                 "ktor.cookies.secure" to "false",
                 "ktor.cookies.sameSite" to "Strict",
 
-                "ktor.ai.geminiApiKey" to "test-dummy-gemini-api-key"
+                "ktor.ai.geminiApiKey" to "test-dummy-gemini-api-key",
 
-
+                "ktor.tmdb.tmdbApiKey" to "test-dummy-tmdb-api-key"
             )
         }
 

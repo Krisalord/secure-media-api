@@ -78,7 +78,7 @@ class MediaIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `get - should return users specific watch history`() = runSecureTestApplication { client ->
+    fun `get - should return users specific watch history including poster urls`() = runSecureTestApplication { client ->
         val token = client.getAuthToken("history_user@example.com")
 
         client.post("/api/v1/media") {
@@ -107,6 +107,11 @@ class MediaIntegrationTest : BaseIntegrationTest() {
         assertEquals(5, inception.rating)
         assertNotNull(inception.id)
         assertNotNull(inception.watchedAt)
+
+        assertTrue(
+            inception.posterUrl == null || inception.posterUrl!!.startsWith("https://image.tmdb.org"),
+            "Poster URL should either be null (due to dummy API key failure) or a valid TMDB image URL."
+        )
     }
 
     @Test

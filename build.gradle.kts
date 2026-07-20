@@ -51,6 +51,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation("io.ktor:ktor-client-mock:${ktorVersion}")
 
     // DATABASE (SQL & POSTGRES)
     implementation("org.jetbrains.exposed:exposed-core:${exposedVersion}")
