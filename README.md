@@ -3,6 +3,13 @@
 A backend API to manage media collections, built with Kotlin, Ktor, and PostgreSQL.
 Supports secure user authentication and full CRUD operations for media and AI suggestions.
 
+## Live Showcase
+
+Check out the live frontend application powered by this API, fully deployed on Render:
+**[Secure Media Dashboard Showcase](https://secure-media-frontend.onrender.com)**
+
+*(Note: Since this is hosted on a free Render tier, the backend may take ~50 seconds to spin up on the first request).*
+
 ## 1 Features
 
 - User registration and login
@@ -55,6 +62,7 @@ JWT_AUDIENCE=secure-media-api
 TOKEN_PEPPER=my-super-secret-local-pepper
 FRONTEND_URL=http://localhost:5173
 GEMINI_API_KEY=your_gemini_api_key_here
+TMDB_API_KEY=your_tmdb_api_key_here
 ```
 
 3. Boot the database
@@ -87,7 +95,16 @@ docker-compose up -d
 | GET    | /api/v1/media      | Retrieve user's watch history     | Yes (Bearer JWT)  |
 | DELETE | /api/v1/media/{id} | Delete a media entry from history | Yes (Bearer JWT)  |
 
-3. AI Recommendation endpoints
+3. Favorite Actors endpoints
+
+| Method | Endpoint                     | Description                          | Auth Required     |
+|--------|------------------------------|--------------------------------------|-------------------|
+| POST   | /api/v1/favorite-actors      | Add an actor to favorites            | Yes (Bearer JWT)  |
+| GET    | /api/v1/favorite-actors      | Retrieve user's favorite actors list | Yes (Bearer JWT)  |
+| DELETE | /api/v1/favorite-actors/{id} | Delete an actor from favorites       | Yes (Bearer JWT)  |
+
+
+4. AI Recommendation endpoints
 
 | Method | Endpoint                | Description                                  | Auth Required    |
 |--------|-------------------------|----------------------------------------------|------------------|
