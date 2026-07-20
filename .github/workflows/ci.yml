@@ -1,0 +1,51 @@
+name: CI / Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    name: Run Unit & Integration Tests
+    runs-on: ubuntu-latest
+
+    env:
+      PORT: 8080
+      DB_URL: jdbc:postgresql://localhost:5432/dummy
+      DB_USER: dummy
+      DB_PASSWORD: dummy
+      JWT_SECRET: dummy-secret-key-for-testing-only
+      JWT_ISSUER: test-issuer
+      JWT_AUDIENCE: test-audience
+      TOKEN_PEPPER: dummy-pepper
+      FRONTEND_URL: http://localhost:5173
+      GEMINI_API_KEY: dummy-gemini-key
+      TMDB_API_KEY: dummy-tmdb-key
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle Caching
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Tests
+        run: ./gradlew test --no-daemon
+
+      - name: Upload Test Report (On Failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: app/build/reports/tests/test/
