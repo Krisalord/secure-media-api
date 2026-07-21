@@ -1,18 +1,18 @@
 package io.github.krisalord.auth
 
-import io.github.krisalord.auth.token.AccessTokenService
-import io.github.krisalord.auth.session.RefreshSessionRepository
-import io.github.krisalord.auth.token.RefreshTokenService
+import io.github.krisalord.core.database.dbQuery
+import io.github.krisalord.core.security.PasswordHashing
+import io.github.krisalord.core.security.TokenProvider
 import java.time.Instant
 
 class AuthService(
     private val authRepository: AuthRepository,
-    private val accessTokenService: AccessTokenService,
-    private val refreshTokenService: RefreshTokenService,
     private val refreshSessionRepository: RefreshSessionRepository,
-    private val reuseDetectionEnabled: Boolean
+    private val tokenProvider: TokenProvider,
+    private val reuseDetectionEnabled: Boolean,
+    private val maxSessionsPerUser: Int
 ) {
-    suspend fun register(request: RegisterRequest) {
+    suspend fun register(request: RegisterRequest) = dbQuery {
         AuthValidator.validateCredentials(request.email, request.password)
         val sanitizedEmail = request.email.trim().lowercase()
 
@@ -26,20 +26,18 @@ class AuthService(
         request: LoginRequest,
         userAgent: String?,
         ipAddress: String?
-    ): Pair<AuthTokenResponse, String> {
+    ): Pair<AuthTokenResponse, String> = dbQuery {
         val sanitizedEmail = request.email.trim().lowercase()
         AuthValidator.validateCredentials(sanitizedEmail, request.password)
 
         val user = authRepository.findByEmail(sanitizedEmail)
             ?: throw UnauthorizedException("Invalid credentials")
 
-        val valid = PasswordHashing.verify(request.password, user.passwordHash)
-
-        if (!valid) {
+        if (!PasswordHashing.verify(request.password, user.passwordHash)) {
             throw UnauthorizedException("Invalid credentials")
         }
 
-        return issueTokens(user, userAgent, ipAddress)
+        issueTokens(user, userAgent, ipAddress)
     }
 
     suspend fun refresh(
@@ -47,31 +45,42 @@ class AuthService(
         userAgent: String?,
         ipAddress: String?
     ): Pair<AuthTokenResponse, String> {
-        val refreshTokenHash = refreshTokenService.hashRefreshToken(refreshToken)
+        var tokenReuseDetected = false
 
-        val session = refreshSessionRepository.findByTokenHash(refreshTokenHash)
-            ?: throw UnauthorizedException("Invalid refresh token")
+        val newTokens = dbQuery {
+            val refreshTokenHash = tokenProvider.hashRefreshToken(refreshToken)
 
-        if (session.expiresAt.isBefore(Instant.now()))
-            throw UnauthorizedException("Session expired")
+            val session = refreshSessionRepository.findByTokenHash(refreshTokenHash)
+                ?: throw UnauthorizedException("Invalid refresh token")
 
-        val revoked = refreshSessionRepository.revokeActiveById(session.id)
-        if (!revoked) {
-            if (reuseDetectionEnabled) {
-                refreshSessionRepository.revokeAllByUserId(session.userId)
+            if (session.expiresAt.isBefore(Instant.now())) {
+                throw UnauthorizedException("Session expired")
             }
+
+            val revoked = refreshSessionRepository.revokeActiveById(session.id)
+            if (!revoked) {
+                if (reuseDetectionEnabled) {
+                    refreshSessionRepository.revokeAllByUserId(session.userId)
+                }
+                tokenReuseDetected = true
+                return@dbQuery null
+            }
+
+            val user = authRepository.findById(session.userId)
+                ?: throw UnauthorizedException("User not found")
+
+            issueTokens(user, userAgent, ipAddress)
+        }
+
+        if (tokenReuseDetected) {
             throw UnauthorizedException("Token reuse detected")
         }
 
-        val user = authRepository.findById(session.userId)
-            ?: throw UnauthorizedException("User not found")
-
-        return issueTokens(user, userAgent, ipAddress)
+        return newTokens ?: throw UnauthorizedException("Invalid refresh token")
     }
 
-    suspend fun logout(refreshToken: String) {
-        val refreshTokenHash = refreshTokenService.hashRefreshToken(refreshToken)
-
+    suspend fun logout(refreshToken: String) = dbQuery {
+        val refreshTokenHash = tokenProvider.hashRefreshToken(refreshToken)
         val session = refreshSessionRepository.findByTokenHash(refreshTokenHash)
 
         if (session != null) {
@@ -79,18 +88,20 @@ class AuthService(
         }
     }
 
-    suspend fun logoutAll(userId: String) {
+    suspend fun logoutAll(userId: String) = dbQuery {
         refreshSessionRepository.revokeAllByUserId(userId)
     }
 
-    private suspend fun issueTokens(
+    private fun issueTokens(
         user: UserModel,
         userAgent: String?,
         ipAddress: String?
     ): Pair<AuthTokenResponse, String> {
-        val refreshToken = refreshTokenService.generateRefreshToken()
+        refreshSessionRepository.enforceSessionLimit(user.id, maxSessionsPerUser)
 
-        val refreshSession = refreshTokenService.buildRefreshSession(
+        val refreshToken = tokenProvider.generateRefreshToken()
+
+        val refreshSession = tokenProvider.buildRefreshSession(
             user.id,
             refreshToken,
             userAgent,
@@ -98,8 +109,7 @@ class AuthService(
         )
 
         refreshSessionRepository.create(refreshSession)
-
-        val accessToken = accessTokenService.generateAccessToken(user)
+        val accessToken = tokenProvider.generateAccessToken(user)
 
         return Pair(AuthTokenResponse(accessToken), refreshToken)
     }

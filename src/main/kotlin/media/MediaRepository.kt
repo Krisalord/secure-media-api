@@ -1,12 +1,11 @@
 package io.github.krisalord.media
 
+import io.github.krisalord.plugins.DatabaseException
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import java.util.UUID
 
@@ -21,31 +20,37 @@ class MediaRepository {
         posterUrl = row[MediaTable.posterUrl]
     )
 
-    suspend fun create(model: WatchedMediaModel): WatchedMediaModel = newSuspendedTransaction {
+    fun create(model: WatchedMediaModel): WatchedMediaModel {
         val insertedRow = MediaTable.insert {
+            it[id] = UUID.fromString(model.id)
             it[userId] = UUID.fromString(model.userId)
             it[title] = model.title
             it[mediaType] = model.mediaType
             it[rating] = model.rating
             it[posterUrl] = model.posterUrl
         }
-        toModel(insertedRow.resultedValues?.first()!!)
+
+        val row = insertedRow.resultedValues?.firstOrNull()
+            ?: throw DatabaseException("Failed to insert media: No auto-generated keys returned.")
+
+        return toModel(row)
     }
 
-    suspend fun findAllByUserId(userId: String): List<WatchedMediaModel> = newSuspendedTransaction {
-        MediaTable
+    fun findAllByUserId(userId: String): List<WatchedMediaModel> {
+        return MediaTable
             .selectAll()
             .where { MediaTable.userId eq UUID.fromString(userId) }
             .map { toModel(it) }
     }
 
-    suspend fun deleteByIdAndUserId(id: String, userId: String): Boolean = newSuspendedTransaction {
-        val mediaUuid = runCatching { UUID.fromString(id) }.getOrNull() ?: return@newSuspendedTransaction false
-        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return@newSuspendedTransaction false
+    fun deleteByIdAndUserId(id: String, userId: String): Boolean {
+        val mediaUuid = runCatching { UUID.fromString(id) }.getOrNull() ?: return false
+        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return false
 
         val deletedRows = MediaTable.deleteWhere {
             (MediaTable.id eq mediaUuid) and (MediaTable.userId eq userUuid)
         }
-        deletedRows == 1
+
+        return deletedRows == 1
     }
 }

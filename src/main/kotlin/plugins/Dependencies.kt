@@ -2,11 +2,9 @@ package io.github.krisalord.plugins
 
 import io.github.krisalord.auth.AuthRepository
 import io.github.krisalord.auth.AuthService
-import io.github.krisalord.auth.session.RefreshSessionRepository
-import io.github.krisalord.auth.token.AccessTokenService
-import io.github.krisalord.auth.token.RefreshTokenHashing
-import io.github.krisalord.auth.token.RefreshTokenService
-import io.github.krisalord.config.AppConfig
+import io.github.krisalord.auth.RefreshSessionRepository
+import io.github.krisalord.core.config.AppConfig
+import io.github.krisalord.core.security.TokenProvider
 import io.github.krisalord.favorite_actors.FavoriteActorRepository
 import io.github.krisalord.favorite_actors.FavoriteActorService
 import io.github.krisalord.media.MediaRepository
@@ -20,7 +18,7 @@ import io.ktor.server.application.*
 
 class Dependencies(
     val authService: AuthService,
-    val accessTokenService: AccessTokenService,
+    val tokenProvider: TokenProvider,
     val mediaService: MediaService,
     val favoriteActorService: FavoriteActorService,
     val recommendationService: RecommendationService
@@ -40,20 +38,17 @@ fun Application.buildDependencies(
     val mediaRepository = MediaRepository()
     val favoriteActorRepository = FavoriteActorRepository()
 
-    val refreshTokenHashing = RefreshTokenHashing(config.auth.refreshToken.tokenHashPepper)
-    val accessTokenService = AccessTokenService(config.auth.accessToken)
-
-    val refreshTokenService = RefreshTokenService(
-        refreshTokenHashing = refreshTokenHashing,
+    val tokenProvider = TokenProvider(
+        accessTokenSettings = config.auth.accessToken,
         refreshTokenSettings = config.auth.refreshToken
     )
 
     val authService = AuthService(
         authRepository = authRepository,
-        accessTokenService = accessTokenService,
-        refreshTokenService = refreshTokenService,
         refreshSessionRepository = refreshSessionRepository,
-        reuseDetectionEnabled = config.auth.refreshToken.reuseDetectionEnabled
+        tokenProvider = tokenProvider,
+        reuseDetectionEnabled = config.auth.refreshToken.reuseDetectionEnabled,
+        maxSessionsPerUser = config.auth.refreshToken.maxSessionsPerUser
     )
 
     val mediaService = MediaService(
@@ -62,7 +57,9 @@ fun Application.buildDependencies(
         tmdbApiKey = config.tmdbConfig.tmdbApiKey
     )
 
-    val favoriteActorService = FavoriteActorService(favoriteActorRepository = favoriteActorRepository)
+    val favoriteActorService = FavoriteActorService(
+        favoriteActorRepository = favoriteActorRepository
+    )
 
     val recommendationService = RecommendationService(
         mediaRepository = mediaRepository,
@@ -73,9 +70,9 @@ fun Application.buildDependencies(
 
     return Dependencies(
         authService = authService,
-        accessTokenService = accessTokenService,
+        tokenProvider = tokenProvider,
         mediaService = mediaService,
-        recommendationService = recommendationService,
-        favoriteActorService = favoriteActorService
+        favoriteActorService = favoriteActorService,
+        recommendationService = recommendationService
     )
 }

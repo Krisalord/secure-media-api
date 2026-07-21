@@ -1,12 +1,12 @@
 package io.github.krisalord.favorite_actors
 
+import io.github.krisalord.plugins.DatabaseException
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import java.util.UUID
 
 class FavoriteActorRepository {
@@ -16,28 +16,34 @@ class FavoriteActorRepository {
         name = row[FavoriteActorTable.name]
     )
 
-    suspend fun create(model: FavoriteActorModel): FavoriteActorModel = newSuspendedTransaction {
+    fun create(model: FavoriteActorModel): FavoriteActorModel {
         val insertedRow = FavoriteActorTable.insert {
+            it[id] = UUID.fromString(model.id)
             it[userId] = UUID.fromString(model.userId)
             it[name] = model.name
         }
-        toModel(insertedRow.resultedValues?.first()!!)
+
+        val row = insertedRow.resultedValues?.firstOrNull()
+            ?: throw DatabaseException("Failed to insert favorite actor: No auto-generated keys returned.")
+
+        return toModel(row)
     }
 
-    suspend fun findAllByUserId(userId: String): List<FavoriteActorModel> = newSuspendedTransaction {
-        FavoriteActorTable
+    fun findAllByUserId(userId: String): List<FavoriteActorModel> {
+        return FavoriteActorTable
             .selectAll()
             .where { FavoriteActorTable.userId eq UUID.fromString(userId) }
             .map { toModel(it) }
     }
 
-    suspend fun deleteByIdAndUserId(id: String, userId: String): Boolean = newSuspendedTransaction {
-        val favoriteActorUuid = runCatching { UUID.fromString(id) }.getOrNull() ?: return@newSuspendedTransaction false
-        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return@newSuspendedTransaction false
+    fun deleteByIdAndUserId(id: String, userId: String): Boolean {
+        val favoriteActorUuid = runCatching { UUID.fromString(id) }.getOrNull() ?: return false
+        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return false
 
         val deletedRows = FavoriteActorTable.deleteWhere {
             (FavoriteActorTable.id eq favoriteActorUuid) and (FavoriteActorTable.userId eq userUuid)
         }
-        deletedRows == 1
+
+        return deletedRows == 1
     }
 }

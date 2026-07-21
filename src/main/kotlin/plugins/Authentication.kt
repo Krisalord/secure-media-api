@@ -1,7 +1,7 @@
 package io.github.krisalord.plugins
 
 import io.github.krisalord.auth.UnauthorizedException
-import io.github.krisalord.auth.token.AccessTokenService
+import io.github.krisalord.core.security.TokenProvider
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
@@ -11,11 +11,11 @@ import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
 
 fun Application.configureAuthentication(
-    accessTokenService: AccessTokenService,
+    tokenProvider: TokenProvider,
 ) {
     install(Authentication) {
         jwt("jwt-auth") {
-            verifier(accessTokenService.verifier())
+            verifier(tokenProvider.verifier())
             validate { credential ->
                 credential.payload.subject
                     ?: return@validate null

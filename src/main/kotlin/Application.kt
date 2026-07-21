@@ -1,7 +1,7 @@
 package io.github.krisalord
 
-import io.github.krisalord.config.DatabaseFactory
-import io.github.krisalord.config.loadAppConfig
+import io.github.krisalord.core.database.DatabaseFactory
+import io.github.krisalord.core.config.loadAppConfig
 import io.github.krisalord.plugins.*
 import io.ktor.server.application.*
 
@@ -14,7 +14,7 @@ fun Application.module() {
 
     configureSerialization()
     configureErrorHandling()
-    configureAuthentication(dependencies.accessTokenService)
+    configureAuthentication(dependencies.tokenProvider)
     configureRateLimiting()
     configureRouting(dependencies, config)
     configureCors()

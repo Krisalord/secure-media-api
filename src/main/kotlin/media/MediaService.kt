@@ -1,5 +1,6 @@
 package io.github.krisalord.media
 
+import io.github.krisalord.core.database.dbQuery
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
@@ -20,7 +21,6 @@ class MediaService(
 
         val fetchedPosterUrl = fetchPosterUrl(sanitizedTitle, request.mediaType)
 
-
         val mediaToCreate = WatchedMediaModel.create(
             userId = userId,
             sanitizedTitle = sanitizedTitle,
@@ -29,17 +29,19 @@ class MediaService(
             posterUrl = fetchedPosterUrl
         )
 
-        return mediaRepository.create(mediaToCreate)
+        return dbQuery {
+            mediaRepository.create(mediaToCreate)
+        }
     }
 
-    suspend fun getWatchHistory(userId: String): List<WatchedMediaModel> {
-        return mediaRepository.findAllByUserId(userId)
+    suspend fun getWatchHistory(userId: String): List<WatchedMediaModel> = dbQuery {
+        mediaRepository.findAllByUserId(userId)
     }
 
-    suspend fun removeMedia(id: String, userId: String): Boolean {
+    suspend fun removeMedia(id: String, userId: String): Boolean = dbQuery {
         val deleted = mediaRepository.deleteByIdAndUserId(id, userId)
         if (!deleted) throw MediaNotFoundException("Media log entry not found or access denied.")
-        return true
+        true
     }
 
     private suspend fun fetchPosterUrl(title: String, type: String): String? {

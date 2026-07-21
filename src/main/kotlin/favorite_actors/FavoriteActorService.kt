@@ -1,7 +1,10 @@
 package io.github.krisalord.favorite_actors
 
+import io.github.krisalord.core.database.dbQuery
+
 class FavoriteActorService(private val favoriteActorRepository: FavoriteActorRepository) {
-    suspend fun logFavoriteActor(userId: String, request: CreateFavoriteActorRequest): FavoriteActorModel {
+
+    suspend fun logFavoriteActor(userId: String, request: CreateFavoriteActorRequest): FavoriteActorModel = dbQuery {
         FavoriteActorValidator.validateLogRequest(request)
         val sanitizedName = request.name.trim().replace(Regex("\\s+"), " ")
 
@@ -10,16 +13,16 @@ class FavoriteActorService(private val favoriteActorRepository: FavoriteActorRep
             sanitizedName = sanitizedName
         )
 
-        return favoriteActorRepository.create(favoriteActorToCreate)
+        favoriteActorRepository.create(favoriteActorToCreate)
     }
 
-    suspend fun getFavoriteActorList(userId: String): List<FavoriteActorModel> {
-        return favoriteActorRepository.findAllByUserId(userId)
+    suspend fun getFavoriteActorList(userId: String): List<FavoriteActorModel> = dbQuery {
+        favoriteActorRepository.findAllByUserId(userId)
     }
 
-    suspend fun removeFavoriteActor(id: String, userId: String): Boolean {
+    suspend fun removeFavoriteActor(id: String, userId: String): Boolean = dbQuery {
         val deleted = favoriteActorRepository.deleteByIdAndUserId(id, userId)
         if (!deleted) throw FavoriteActorNotFoundException("Favorite actor not found or access denied.")
-        return true
+        true
     }
 }

@@ -1,6 +1,5 @@
 package io.github.krisalord.recommendation
 
-import io.github.krisalord.config.AppConfig
 import io.github.krisalord.favorite_actors.FavoriteActorRepository
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.WatchedMediaModel

@@ -20,16 +20,19 @@ class AuthRepository {
         updatedAt = row[UsersTable.updatedAt]
     )
 
-    suspend fun create(user: UserModel): UserModel = newSuspendedTransaction {
+    fun create(user: UserModel): UserModel {
         try {
             val insertedRow = UsersTable.insert {
-                if (user.id.isNotEmpty())
-                    it[id] = UUID.fromString(user.id)
+                it[id] = UUID.fromString(user.id)
                 it[email] = user.email
                 it[passwordHash] = user.passwordHash
                 it[role] = user.role
             }
-            toModel(insertedRow.resultedValues?.first()!!)
+
+            val row = insertedRow.resultedValues?.firstOrNull()
+                ?: throw DatabaseException("Failed to insert user: No auto-generated keys returned.")
+
+            return toModel(row)
         } catch (e: ExposedSQLException) {
             if (e.sqlState == "23505") {
                 throw UserAlreadyExistsException("This email is already registered")
@@ -38,18 +41,18 @@ class AuthRepository {
         }
     }
 
-    suspend fun findByEmail(email: String): UserModel? = newSuspendedTransaction {
-        UsersTable
+    fun findByEmail(email: String): UserModel? {
+        return UsersTable
             .selectAll()
             .where { UsersTable.email eq email }
             .map { toModel(it) }
             .singleOrNull()
     }
 
-    suspend fun findById(userId: String): UserModel? = newSuspendedTransaction {
-        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return@newSuspendedTransaction null
+    fun findById(userId: String): UserModel? {
+        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return null
 
-        UsersTable
+        return UsersTable
             .selectAll()
             .where { UsersTable.id eq userUuid }
             .map { toModel(it) }

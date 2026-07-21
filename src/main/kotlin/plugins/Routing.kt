@@ -3,7 +3,7 @@ package io.github.krisalord.plugins
 import io.github.krisalord.auth.authRoutes
 import io.github.krisalord.media.mediaRoutes
 import io.github.krisalord.recommendation.recommendationRoutes
-import io.github.krisalord.config.AppConfig
+import io.github.krisalord.core.config.AppConfig
 import io.github.krisalord.favorite_actors.favoriteActorRoutes
 import io.ktor.server.application.*
 import io.ktor.server.plugins.ratelimit.RateLimitName
