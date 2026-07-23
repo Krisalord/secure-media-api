@@ -58,7 +58,12 @@ object DatabaseFactory {
         Database.Companion.connect(dataSource)
 
         transaction {
-            SchemaUtils.create(UsersTable, UserSessionTable, MediaTable, FavoriteActorTable)
+            SchemaUtils.createMissingTablesAndColumns(
+                UsersTable,
+                UserSessionTable,
+                MediaTable,
+                FavoriteActorTable
+            )
         }
 
         logger.info("PostgreSQL fully initialized and connected cleanly!")

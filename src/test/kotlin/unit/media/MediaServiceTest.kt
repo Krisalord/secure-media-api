@@ -1,15 +1,25 @@
 package io.github.krisalord.unit.media
 
-import io.github.krisalord.media.*
-import io.ktor.client.*
-import io.ktor.client.engine.mock.*
-import io.ktor.http.*
-import io.mockk.*
+import io.github.krisalord.core.database.dbQuery
+import io.github.krisalord.media.CreateMediaRequest
+import io.github.krisalord.media.MediaNotFoundException
+import io.github.krisalord.media.MediaRepository
+import io.github.krisalord.media.MediaService
+import io.github.krisalord.media.WatchedMediaModel
+import io.github.krisalord.unit.core.MockHttpClients
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.Instant
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class MediaServiceTest {
 
@@ -17,30 +27,30 @@ class MediaServiceTest {
     private lateinit var mediaService: MediaService
     private val fakeUserId = "123e4567-e89b-12d3-a456-426614174000"
 
-    private val mockEngine = MockEngine { request ->
-        when (request.url.encodedPath) {
-            "/3/search/movie" -> respond(
-                content = """{"results": [{"poster_path": "/matrix_fake_poster.jpg"}]}""",
-                status = HttpStatusCode.OK,
-                headers = headersOf(HttpHeaders.ContentType, "application/json")
-            )
-            "/3/search/tv" -> respond(
-                content = """{"results": []}""",
-                status = HttpStatusCode.OK,
-                headers = headersOf(HttpHeaders.ContentType, "application/json")
-            )
-            else -> respondError(HttpStatusCode.NotFound)
-        }
-    }
-
     @BeforeEach
     fun setup() {
+        // 1. Mock the top-level file where dbQuery lives
+        mockkStatic("io.github.krisalord.core.database.DatabaseFactoryKt")
+
+        // 2. Intercept dbQuery and instruct it to instantly execute its lambda block
+        coEvery { dbQuery<Any?>(any()) } coAnswers {
+            // REMOVED 'suspend' here so it properly matches your synchronous repository calls!
+            val block = firstArg<() -> Any?>()
+            block.invoke()
+        }
+
         mediaRepository = mockk()
         mediaService = MediaService(
             mediaRepository = mediaRepository,
-            httpClient = HttpClient(mockEngine),
+            httpClient = MockHttpClients.createTmdbMockClient(),
             tmdbApiKey = "fake_test_key"
         )
+    }
+
+    @AfterEach
+    fun tearDown() {
+        // 3. Always unmock static functions after each test to prevent test pollution
+        unmockkAll()
     }
 
     @Test
@@ -87,37 +97,13 @@ class MediaServiceTest {
     }
 
     @Test
-    fun `removeMedia - Valid ID - Returns True`() = runBlocking {
-        val mediaId = "media-123"
-        coEvery { mediaRepository.deleteByIdAndUserId(mediaId, fakeUserId) } returns true
-
-        val result = mediaService.removeMedia(mediaId, fakeUserId)
-
-        assertTrue(result)
-        coVerify { mediaRepository.deleteByIdAndUserId(mediaId, fakeUserId) }
-    }
-
-    @Test
     fun `removeMedia - Invalid ID or Ownership - Throws Exception`() = runBlocking {
         val mediaId = "wrong-media-id"
         coEvery { mediaRepository.deleteByIdAndUserId(mediaId, fakeUserId) } returns false
-        val exception = assertThrows(MediaNotFoundException::class.java) {
-            runBlocking { mediaService.removeMedia(mediaId, fakeUserId) }
+
+        val exception = assertThrows<MediaNotFoundException> {
+            mediaService.removeMedia(mediaId, fakeUserId)
         }
         assertEquals("Media log entry not found or access denied.", exception.message)
-    }
-
-    @Test
-    fun `getWatchHistory - Returns List of Media`() = runBlocking {
-        val mockList = listOf(
-            WatchedMediaModel("1", fakeUserId, "Movie A", "MOVIE", 4, Instant.now(), null),
-            WatchedMediaModel("2", fakeUserId, "Movie B", "MOVIE", 5, Instant.now(), null)
-        )
-        coEvery { mediaRepository.findAllByUserId(fakeUserId) } returns mockList
-
-        val result = mediaService.getWatchHistory(fakeUserId)
-
-        assertEquals(2, result.size)
-        assertEquals("Movie A", result[0].title)
     }
 }

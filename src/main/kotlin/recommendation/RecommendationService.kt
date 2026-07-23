@@ -1,5 +1,6 @@
 package io.github.krisalord.recommendation
 
+import io.github.krisalord.core.database.dbQuery // <-- Make sure this is imported!
 import io.github.krisalord.favorite_actors.FavoriteActorRepository
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.WatchedMediaModel
@@ -23,8 +24,11 @@ class RecommendationService(
         RecommendationValidator.validateRequest(request)
         val promptType = PromptType.valueOf(request.promptType.uppercase(Locale.getDefault()))
 
-        val watchHistory = mediaRepository.findAllByUserId(userId)
-        val favoriteActors = favoriteActorRepository.findAllByUserId(userId).map { it.name }
+        val (watchHistory, favoriteActors) = dbQuery {
+            val history = mediaRepository.findAllByUserId(userId)
+            val actors = favoriteActorRepository.findAllByUserId(userId).map { it.name }
+            Pair(history, actors)
+        }
 
         if (promptType == PromptType.FAVORITE_ACTORS && favoriteActors.isEmpty()) {
             throw IllegalArgumentException("You must add at least one favorite actor before using this prompt type.")

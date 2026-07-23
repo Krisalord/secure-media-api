@@ -36,8 +36,8 @@ class AuthRepositoryTest : BaseIntegrationTest() {
 
     @Test
     fun `create - should throw UserAlreadyExistsException when email violates unique constraint`() = runSecureTestApplication {
-        val userOne = UserModel.create("duplicate@example.com", "hash1")
-        val userTwo = UserModel.create("duplicate@example.com", "hash2")
+        val userOne = UserModel.create("duplicate1@example.com", "hash1")
+        val userTwo = UserModel.create("duplicate1@example.com", "hash2")
 
         runDbTest {
             authRepository.create(userOne)
