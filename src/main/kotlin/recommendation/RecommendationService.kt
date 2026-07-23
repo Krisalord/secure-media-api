@@ -1,12 +1,13 @@
 package io.github.krisalord.recommendation
 
-import io.github.krisalord.core.database.dbQuery // <-- Make sure this is imported!
+import io.github.krisalord.core.database.dbQuery
 import io.github.krisalord.favorite_actors.FavoriteActorRepository
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.WatchedMediaModel
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
 import java.time.Instant
@@ -91,7 +92,8 @@ class RecommendationService(
         }
 
         if (!response.status.isSuccess()) {
-            throw AiProviderException("Gemini engine invocation failed with status code: ${response.status}")
+            val errorBody = response.bodyAsText()
+            throw AiProviderException("Gemini engine invocation failed with status code: ${response.status}. Details: $errorBody")
         }
 
         val geminiBody = response.body<GeminiResponse>()
