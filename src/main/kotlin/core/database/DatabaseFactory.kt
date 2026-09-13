@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource
 import io.github.krisalord.auth.UserSessionTable
 import io.github.krisalord.auth.UsersTable
 import io.github.krisalord.core.config.DatabaseSettings
-import io.github.krisalord.favorite_actors.FavoriteActorTable
 import io.github.krisalord.media.MediaTable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -61,8 +60,7 @@ object DatabaseFactory {
             SchemaUtils.createMissingTablesAndColumns(
                 UsersTable,
                 UserSessionTable,
-                MediaTable,
-                FavoriteActorTable
+                MediaTable
             )
         }
 

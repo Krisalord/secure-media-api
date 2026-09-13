@@ -1,18 +1,16 @@
 package io.github.krisalord.auth
 
-
-import io.github.krisalord.plugins.DatabaseException
+import io.github.krisalord.core.exceptions.DatabaseException
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import java.util.UUID
 
 class AuthRepository {
     private fun toModel(row: ResultRow): UserModel = UserModel(
-        id = row[UsersTable.id].value.toString(),
+        id = row[UsersTable.id].value,
         email = row[UsersTable.email],
         passwordHash = row[UsersTable.passwordHash],
         role = row[UsersTable.role],
@@ -23,7 +21,7 @@ class AuthRepository {
     fun create(user: UserModel): UserModel {
         try {
             val insertedRow = UsersTable.insert {
-                it[id] = UUID.fromString(user.id)
+                it[id] = user.id
                 it[email] = user.email
                 it[passwordHash] = user.passwordHash
                 it[role] = user.role
@@ -49,12 +47,10 @@ class AuthRepository {
             .singleOrNull()
     }
 
-    fun findById(userId: String): UserModel? {
-        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return null
-
+    fun findById(userId: UUID): UserModel? {
         return UsersTable
             .selectAll()
-            .where { UsersTable.id eq userUuid }
+            .where { UsersTable.id eq userId }
             .map { toModel(it) }
             .singleOrNull()
     }

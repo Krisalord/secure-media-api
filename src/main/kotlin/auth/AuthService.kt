@@ -4,6 +4,7 @@ import io.github.krisalord.core.database.dbQuery
 import io.github.krisalord.core.security.PasswordHashing
 import io.github.krisalord.core.security.TokenProvider
 import java.time.Instant
+import java.util.UUID
 
 class AuthService(
     private val authRepository: AuthRepository,
@@ -57,7 +58,8 @@ class AuthService(
                 throw UnauthorizedException("Session expired")
             }
 
-            val revoked = refreshSessionRepository.revokeActiveById(session.id)
+            val sessionId = session.id ?: throw UnauthorizedException("Invalid refresh token")
+            val revoked = refreshSessionRepository.revokeActiveById(sessionId)
             if (!revoked) {
                 if (reuseDetectionEnabled) {
                     refreshSessionRepository.revokeAllByUserId(session.userId)
@@ -83,12 +85,12 @@ class AuthService(
         val refreshTokenHash = tokenProvider.hashRefreshToken(refreshToken)
         val session = refreshSessionRepository.findByTokenHash(refreshTokenHash)
 
-        if (session != null) {
+        if (session != null && session.id != null) {
             refreshSessionRepository.revokeActiveById(session.id)
         }
     }
 
-    suspend fun logoutAll(userId: String) = dbQuery {
+    suspend fun logoutAll(userId: UUID) = dbQuery {
         refreshSessionRepository.revokeAllByUserId(userId)
     }
 

@@ -13,8 +13,8 @@ import java.util.*
 
 class RefreshSessionRepository {
     private fun toModel(row: ResultRow): RefreshSessionModel = RefreshSessionModel(
-        id = row[UserSessionTable.id].value.toString(),
-        userId = row[UserSessionTable.userId].toString(),
+        id = row[UserSessionTable.id].value,
+        userId = row[UserSessionTable.userId].value,
         refreshTokenHash = row[UserSessionTable.refreshTokenHash],
         expiresAt = row[UserSessionTable.expiresAt],
         createdAt = row[UserSessionTable.createdAt],
@@ -25,8 +25,8 @@ class RefreshSessionRepository {
 
     fun create(session: RefreshSessionModel): RefreshSessionModel {
         val insertedRow = UserSessionTable.insert {
-            it[id] = UUID.fromString(session.id.ifEmpty { UUID.randomUUID().toString() })
-            it[userId] = UUID.fromString(session.userId)
+            it[id] = session.id ?: UUID.randomUUID()
+            it[userId] = session.userId
             it[refreshTokenHash] = session.refreshTokenHash
             it[expiresAt] = session.expiresAt
             it[createdAt] = session.createdAt
@@ -49,11 +49,9 @@ class RefreshSessionRepository {
             .singleOrNull()
     }
 
-    fun revokeActiveById(sessionId: String): Boolean {
-        val uuid = runCatching { UUID.fromString(sessionId) }.getOrNull() ?: return false
-
+    fun revokeActiveById(sessionId: UUID): Boolean {
         val updatedCount = UserSessionTable.update({
-            (UserSessionTable.id eq uuid) and (UserSessionTable.isRevoked eq false)
+            (UserSessionTable.id eq sessionId) and (UserSessionTable.isRevoked eq false)
         }) {
             it[isRevoked] = true
         }
@@ -61,22 +59,18 @@ class RefreshSessionRepository {
         return updatedCount == 1
     }
 
-    fun revokeAllByUserId(userId: String) {
-        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return
-
+    fun revokeAllByUserId(userId: UUID) {
         UserSessionTable.update({
-            (UserSessionTable.userId eq userUuid) and (UserSessionTable.isRevoked eq false)
+            (UserSessionTable.userId eq userId) and (UserSessionTable.isRevoked eq false)
         }) {
             it[isRevoked] = true
         }
     }
 
-    fun enforceSessionLimit(userId: String, maxSessions: Int) {
-        val userUuid = runCatching { UUID.fromString(userId) }.getOrNull() ?: return
-
+    fun enforceSessionLimit(userId: UUID, maxSessions: Int) {
         val activeSessionIds = UserSessionTable
             .selectAll()
-            .where { (UserSessionTable.userId eq userUuid) and (UserSessionTable.isRevoked eq false) }
+            .where { (UserSessionTable.userId eq userId) and (UserSessionTable.isRevoked eq false) }
             .orderBy(UserSessionTable.createdAt to SortOrder.DESC)
             .map { it[UserSessionTable.id].value }
 

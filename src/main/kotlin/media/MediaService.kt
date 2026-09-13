@@ -9,13 +9,14 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import java.util.UUID
 
 class MediaService(
     private val mediaRepository: MediaRepository,
     private val httpClient: io.ktor.client.HttpClient,
     private val tmdbApiKey: String
 ) {
-    suspend fun logMedia(userId: String, request: CreateMediaRequest): WatchedMediaModel {
+    suspend fun logMedia(userId: UUID, request: CreateMediaRequest): WatchedMediaModel {
         MediaValidator.validateLogRequest(request)
         val sanitizedTitle = request.title.trim().replace(Regex("\\s+"), " ")
 
@@ -34,11 +35,11 @@ class MediaService(
         }
     }
 
-    suspend fun getWatchHistory(userId: String): List<WatchedMediaModel> = dbQuery {
+    suspend fun getWatchHistory(userId: UUID): List<WatchedMediaModel> = dbQuery {
         mediaRepository.findAllByUserId(userId)
     }
 
-    suspend fun removeMedia(id: String, userId: String): Boolean = dbQuery {
+    suspend fun removeMedia(id: UUID, userId: UUID): Boolean = dbQuery {
         val deleted = mediaRepository.deleteByIdAndUserId(id, userId)
         if (!deleted) throw MediaNotFoundException("Media log entry not found or access denied.")
         true

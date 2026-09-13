@@ -1,7 +1,6 @@
 package io.github.krisalord.recommendation
 
 import io.github.krisalord.core.database.dbQuery
-import io.github.krisalord.favorite_actors.FavoriteActorRepository
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.WatchedMediaModel
 import io.ktor.client.*
@@ -12,30 +11,25 @@ import io.ktor.http.*
 import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.util.Locale
+import java.util.UUID
 
 class RecommendationService(
     private val mediaRepository: MediaRepository,
-    private val favoriteActorRepository: FavoriteActorRepository,
     private val httpClient: HttpClient,
     private val geminiApiKey: String
 ) {
     private val jsonParser = Json { ignoreUnknownKeys = true }
 
-    suspend fun getRecommendations(userId: String, request: RecommendationRequest): RecommendationResponse {
+    suspend fun getRecommendations(userId: UUID, request: RecommendationRequest): RecommendationResponse {
         RecommendationValidator.validateRequest(request)
         val promptType = PromptType.valueOf(request.promptType.uppercase(Locale.getDefault()))
 
-        val (watchHistory, favoriteActors) = dbQuery {
-            val history = mediaRepository.findAllByUserId(userId)
-            val actors = favoriteActorRepository.findAllByUserId(userId).map { it.name }
-            Pair(history, actors)
+        val watchHistory = dbQuery {
+            mediaRepository.findAllByUserId(userId)
         }
 
-        if (promptType == PromptType.FAVORITE_ACTORS && favoriteActors.isEmpty()) {
-            throw IllegalArgumentException("You must add at least one favorite actor before using this prompt type.")
-        }
 
-        val aiRawOutput = fetchFromGemini(watchHistory, favoriteActors, promptType, request.customInput)
+        val aiRawOutput = fetchFromGemini(watchHistory, promptType, request.customInput)
 
         val validatedItems = runCatching {
             jsonParser.decodeFromString<List<RecommendationItem>>(aiRawOutput)
@@ -52,7 +46,6 @@ class RecommendationService(
 
     private suspend fun fetchFromGemini(
         history: List<WatchedMediaModel>,
-        favoriteActors: List<String>,
         type: PromptType,
         customInput: String?
     ): String {
@@ -73,10 +66,6 @@ class RecommendationService(
             PromptType.ACTION_PACKED -> "Suggest 3 entries strictly within Action, Thriller, or Sci-Fi genres."
             PromptType.BINGE_WORTHY -> "Suggest 3 serial television shows with deep serialization."
             PromptType.CUSTOM -> "Satisfy this user constraint: '$customInput'."
-            PromptType.FAVORITE_ACTORS -> {
-                val actorsList = favoriteActors.joinToString(", ")
-                "Suggest 3 new movies or shows featuring these specific actors: $actorsList. CRITICAL REQUIREMENT: You must cross-reference their filmography and DO NOT suggest anything that is already listed in the user's watch history above."
-            }
         }
 
         val fullPrompt = "$systemInstruction\nDirective: $actionModifier"

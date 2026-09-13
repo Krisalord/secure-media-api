@@ -3,6 +3,7 @@ package io.github.krisalord.media
 
 import io.github.krisalord.plugins.MEDIA_RATE_LIMIT
 import io.github.krisalord.plugins.requireUserId
+import io.github.krisalord.plugins.requireUuidParam
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.ratelimit.RateLimitName
@@ -31,7 +32,7 @@ fun Route.mediaRoutes(mediaService: MediaService) {
 
                 delete("/{id}") {
                     val userId = call.requireUserId()
-                    val mediaId = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
+                    val mediaId = call.requireUuidParam("id")
 
                     mediaService.removeMedia(mediaId, userId)
                     call.respond(HttpStatusCode.NoContent)

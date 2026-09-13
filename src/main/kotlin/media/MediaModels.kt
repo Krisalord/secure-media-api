@@ -19,8 +19,8 @@ object MediaTable : UUIDTable("media") {
 }
 
 data class WatchedMediaModel(
-    val id: String,
-    val userId: String,
+    val id: UUID? = null,
+    val userId: UUID,
     val title: String,
     val mediaType: String,
     val rating: Int,
@@ -29,14 +29,14 @@ data class WatchedMediaModel(
 ) {
     companion object {
         fun create(
-            userId: String,
+            userId: UUID,
             sanitizedTitle: String,
             rawMediaType: String,
             rating: Int,
             posterUrl: String?
         ): WatchedMediaModel {
             return WatchedMediaModel(
-                id = UUID.randomUUID().toString(),
+                id = UUID.randomUUID(),
                 userId = userId,
                 title = sanitizedTitle,
                 mediaType = rawMediaType,
@@ -67,8 +67,8 @@ data class MediaResponse(
 )
 
 fun WatchedMediaModel.toResponse(): MediaResponse = MediaResponse(
-    id = this.id,
-    userId = this.userId,
+    id = this.id.toString(),
+    userId = this.userId.toString(),
     title = this.title,
     mediaType = this.mediaType,
     rating = this.rating,

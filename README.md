@@ -95,16 +95,8 @@ docker-compose up -d
 | GET    | /api/v1/media      | Retrieve user's watch history     | Yes (Bearer JWT)  |
 | DELETE | /api/v1/media/{id} | Delete a media entry from history | Yes (Bearer JWT)  |
 
-3. Favorite Actors endpoints
 
-| Method | Endpoint                     | Description                          | Auth Required     |
-|--------|------------------------------|--------------------------------------|-------------------|
-| POST   | /api/v1/favorite-actors      | Add an actor to favorites            | Yes (Bearer JWT)  |
-| GET    | /api/v1/favorite-actors      | Retrieve user's favorite actors list | Yes (Bearer JWT)  |
-| DELETE | /api/v1/favorite-actors/{id} | Delete an actor from favorites       | Yes (Bearer JWT)  |
-
-
-4. AI Recommendation endpoints
+3. AI Recommendation endpoints
 
 | Method | Endpoint                | Description                                  | Auth Required    |
 |--------|-------------------------|----------------------------------------------|------------------|

@@ -5,8 +5,6 @@ import io.github.krisalord.auth.AuthService
 import io.github.krisalord.auth.RefreshSessionRepository
 import io.github.krisalord.core.config.AppConfig
 import io.github.krisalord.core.security.TokenProvider
-import io.github.krisalord.favorite_actors.FavoriteActorRepository
-import io.github.krisalord.favorite_actors.FavoriteActorService
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.MediaService
 import io.github.krisalord.recommendation.RecommendationService
@@ -20,7 +18,6 @@ class Dependencies(
     val authService: AuthService,
     val tokenProvider: TokenProvider,
     val mediaService: MediaService,
-    val favoriteActorService: FavoriteActorService,
     val recommendationService: RecommendationService
 )
 
@@ -36,7 +33,6 @@ fun Application.buildDependencies(
     val authRepository = AuthRepository()
     val refreshSessionRepository = RefreshSessionRepository()
     val mediaRepository = MediaRepository()
-    val favoriteActorRepository = FavoriteActorRepository()
 
     val tokenProvider = TokenProvider(
         accessTokenSettings = config.auth.accessToken,
@@ -57,13 +53,9 @@ fun Application.buildDependencies(
         tmdbApiKey = config.tmdbConfig.tmdbApiKey
     )
 
-    val favoriteActorService = FavoriteActorService(
-        favoriteActorRepository = favoriteActorRepository
-    )
 
     val recommendationService = RecommendationService(
         mediaRepository = mediaRepository,
-        favoriteActorRepository = favoriteActorRepository,
         httpClient = httpClient,
         geminiApiKey = config.aiConfig.geminiApiKey
     )
@@ -72,7 +64,6 @@ fun Application.buildDependencies(
         authService = authService,
         tokenProvider = tokenProvider,
         mediaService = mediaService,
-        favoriteActorService = favoriteActorService,
         recommendationService = recommendationService
     )
 }

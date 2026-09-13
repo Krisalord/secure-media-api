@@ -25,7 +25,7 @@ class TokenProvider(
             .withJWTId(UUID.randomUUID().toString())
             .withIssuer(accessTokenSettings.issuer)
             .withAudience(accessTokenSettings.audience)
-            .withSubject(user.id)
+            .withSubject(user.id.toString())
             .withClaim("role", user.role)
             .withIssuedAt(Date())
             .withExpiresAt(Date(System.currentTimeMillis() + accessTokenSettings.validityMs))
@@ -57,13 +57,13 @@ class TokenProvider(
     }
 
     fun buildRefreshSession(
-        userId: String,
+        userId: UUID,
         rawRefreshToken: String,
         userAgent: String?,
         ipAddress: String?
     ): RefreshSessionModel {
         return RefreshSessionModel(
-            id = "",
+            id = null,
             userId = userId,
             refreshTokenHash = hashRefreshToken(rawRefreshToken),
             expiresAt = Instant.now().plus(refreshTokenSettings.validityDays, ChronoUnit.DAYS),

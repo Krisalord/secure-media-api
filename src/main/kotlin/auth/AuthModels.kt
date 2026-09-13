@@ -28,7 +28,7 @@ object UserSessionTable : UUIDTable("user_session") {
 
 
 data class UserModel(
-    val id: String,
+    val id: UUID,
     val email: String,
     val passwordHash: String,
     val role: String = "USER",
@@ -41,7 +41,7 @@ data class UserModel(
             passwordHash: String
         ): UserModel {
             return UserModel(
-                id = UUID.randomUUID().toString(),
+                id = UUID.randomUUID(),
                 email = sanitizedEmail,
                 passwordHash = passwordHash,
                 role = "USER",
@@ -53,8 +53,8 @@ data class UserModel(
 }
 
 data class RefreshSessionModel(
-    val id: String,
-    val userId: String,
+    val id: UUID? = null,
+    val userId: UUID,
     val refreshTokenHash: String,
     val expiresAt: Instant,
     val createdAt: Instant,
