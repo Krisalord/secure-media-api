@@ -1,6 +1,5 @@
 package io.github.krisalord.unit.recommendation
 
-import io.github.krisalord.favorite_actors.FavoriteActorRepository
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.recommendation.RecommendationRequest
 import io.github.krisalord.recommendation.RecommendationService
@@ -16,20 +15,19 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class RecommendationServiceTest {
 
     private lateinit var mediaRepository: MediaRepository
-    private lateinit var favoriteActorRepository: FavoriteActorRepository
-    private val fakeUserId = "user-123"
+    private val fakeUserId = UUID.randomUUID()
     private val fakeApiKey = "test-gemini-key"
 
     @BeforeEach
     fun setup() {
         mediaRepository = mockk()
-        favoriteActorRepository = mockk()
     }
 
     private fun createServiceWithMockEngine(engine: MockEngine): RecommendationService {
@@ -41,7 +39,6 @@ class RecommendationServiceTest {
 
         return RecommendationService(
             mediaRepository = mediaRepository,
-            favoriteActorRepository = favoriteActorRepository,
             httpClient = mockClient,
             geminiApiKey = fakeApiKey
         )
@@ -77,7 +74,6 @@ class RecommendationServiceTest {
         val request = RecommendationRequest(promptType = "DEFAULT")
 
         coEvery { mediaRepository.findAllByUserId(fakeUserId) } returns emptyList()
-        coEvery { favoriteActorRepository.findAllByUserId(fakeUserId) } returns emptyList()
 
         val response = service.getRecommendations(fakeUserId, request)
 
@@ -97,7 +93,6 @@ class RecommendationServiceTest {
         val request = RecommendationRequest(promptType = "ACTION_PACKED")
 
         coEvery { mediaRepository.findAllByUserId(fakeUserId) } returns emptyList()
-        coEvery { favoriteActorRepository.findAllByUserId(fakeUserId) } returns emptyList()
 
         val exception = assertThrows<Exception> {
             service.getRecommendations(fakeUserId, request)

@@ -49,7 +49,7 @@ class TokenProviderTest {
         val decodedJwt = tokenProvider.verifier().verify(token)
 
         assertEquals("test-issuer", decodedJwt.issuer)
-        assertEquals(dummyUser.id, decodedJwt.subject)
+        assertEquals(dummyUser.id.toString(), decodedJwt.subject)
         assertEquals("USER", decodedJwt.getClaim("role").asString())
     }
 

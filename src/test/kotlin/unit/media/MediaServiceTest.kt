@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.Instant
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -25,16 +26,13 @@ class MediaServiceTest {
 
     private lateinit var mediaRepository: MediaRepository
     private lateinit var mediaService: MediaService
-    private val fakeUserId = "123e4567-e89b-12d3-a456-426614174000"
+    private val fakeUserId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
 
     @BeforeEach
     fun setup() {
-        // 1. Mock the top-level file where dbQuery lives
         mockkStatic("io.github.krisalord.core.database.DatabaseFactoryKt")
 
-        // 2. Intercept dbQuery and instruct it to instantly execute its lambda block
         coEvery { dbQuery<Any?>(any()) } coAnswers {
-            // REMOVED 'suspend' here so it properly matches your synchronous repository calls!
             val block = firstArg<() -> Any?>()
             block.invoke()
         }
@@ -49,7 +47,6 @@ class MediaServiceTest {
 
     @AfterEach
     fun tearDown() {
-        // 3. Always unmock static functions after each test to prevent test pollution
         unmockkAll()
     }
 
@@ -57,7 +54,7 @@ class MediaServiceTest {
     fun `logMedia - Valid Movie Request - Fetches TMDB Poster and Saves`() = runBlocking {
         val request = CreateMediaRequest(title = "The Matrix", mediaType = "MOVIE", rating = 5)
         val expectedModel = WatchedMediaModel(
-            id = "media-123",
+            id = UUID.randomUUID(),
             userId = fakeUserId,
             title = "The Matrix",
             mediaType = "MOVIE",
@@ -79,7 +76,7 @@ class MediaServiceTest {
     fun `logMedia - TMDB Returns Empty - Saves Without Poster`() = runBlocking {
         val request = CreateMediaRequest(title = "Unknown TV Show", mediaType = "TV_SHOW", rating = 3)
         val expectedModel = WatchedMediaModel(
-            id = "media-456",
+            id = UUID.randomUUID(),
             userId = fakeUserId,
             title = "Unknown TV Show",
             mediaType = "TV_SHOW",
@@ -98,7 +95,7 @@ class MediaServiceTest {
 
     @Test
     fun `removeMedia - Invalid ID or Ownership - Throws Exception`() = runBlocking {
-        val mediaId = "wrong-media-id"
+        val mediaId = UUID.randomUUID()
         coEvery { mediaRepository.deleteByIdAndUserId(mediaId, fakeUserId) } returns false
 
         val exception = assertThrows<MediaNotFoundException> {

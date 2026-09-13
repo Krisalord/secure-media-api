@@ -30,7 +30,7 @@ class RefreshSessionRepositoryTest : BaseIntegrationTest() {
 
             for (i in 1..3) {
                 val session = RefreshSessionModel(
-                    id = UUID.randomUUID().toString(),
+                    id = UUID.randomUUID(),
                     userId = user.id,
                     refreshTokenHash = "hash_$i",
                     expiresAt = Instant.now().plusSeconds(3600),
@@ -44,9 +44,9 @@ class RefreshSessionRepositoryTest : BaseIntegrationTest() {
 
             refreshSessionRepository.enforceSessionLimit(user.id, maxSessions = 2)
 
-            val session1 = refreshSessionRepository.findByTokenHash("hash_1") // The oldest
+            val session1 = refreshSessionRepository.findByTokenHash("hash_1")
             val session2 = refreshSessionRepository.findByTokenHash("hash_2")
-            val session3 = refreshSessionRepository.findByTokenHash("hash_3") // The newest
+            val session3 = refreshSessionRepository.findByTokenHash("hash_3")
 
             assertTrue(session1!!.isRevoked)
             assertEquals(false, session2!!.isRevoked)
@@ -59,7 +59,7 @@ class RefreshSessionRepositoryTest : BaseIntegrationTest() {
         runDbTest {
             val user = createDummyUser()
             val session = RefreshSessionModel(
-                id = UUID.randomUUID().toString(),
+                id = UUID.randomUUID(),
                 userId = user.id,
                 refreshTokenHash = "hash_revoke_all",
                 expiresAt = Instant.now().plusSeconds(3600),

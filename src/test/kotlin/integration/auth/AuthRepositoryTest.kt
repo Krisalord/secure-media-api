@@ -87,16 +87,8 @@ class AuthRepositoryTest : BaseIntegrationTest() {
     @Test
     fun `findById - should return null if UUID does not exist in the database`() = runSecureTestApplication {
         runDbTest {
-            val randomUuid = UUID.randomUUID().toString()
+            val randomUuid = UUID.randomUUID()
             val foundUser = authRepository.findById(randomUuid)
-            assertNull(foundUser)
-        }
-    }
-
-    @Test
-    fun `findById - should gracefully return null without crashing if provided string is not a valid UUID format`() = runSecureTestApplication {
-        runDbTest {
-            val foundUser = authRepository.findById("not-a-valid-uuid-string")
             assertNull(foundUser)
         }
     }

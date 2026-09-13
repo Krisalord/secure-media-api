@@ -39,7 +39,7 @@ class MediaRepositoryTest : BaseIntegrationTest() {
             val mediaA = mediaRepository.create(WatchedMediaModel.create(userA.id, "Movie A", "MOVIE", 5, null))
 
             // User B attempts to delete User A's movie
-            val maliciousDelete = mediaRepository.deleteByIdAndUserId(mediaA.id, userB.id)
+            val maliciousDelete = mediaRepository.deleteByIdAndUserId(mediaA.id!!, userB.id)
             assertEquals(false, maliciousDelete)
 
             // User A deletes their own movie
