@@ -1,20 +1,19 @@
 package io.github.krisalord.media
 
 
-import io.github.krisalord.plugins.MEDIA_RATE_LIMIT
+import io.github.krisalord.plugins.AUTHENTICATED_RATE_LIMIT
 import io.github.krisalord.plugins.requireUserId
 import io.github.krisalord.plugins.requireUuidParam
 import io.ktor.http.*
 import io.ktor.server.auth.*
-import io.ktor.server.plugins.ratelimit.RateLimitName
-import io.ktor.server.plugins.ratelimit.rateLimit
+import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.mediaRoutes(mediaService: MediaService) {
     authenticate("jwt-auth") {
-        rateLimit(RateLimitName(MEDIA_RATE_LIMIT)) {
+        rateLimit(RateLimitName(AUTHENTICATED_RATE_LIMIT)) {
             route("/api/v1/media") {
                 post {
                     val userId = call.requireUserId()

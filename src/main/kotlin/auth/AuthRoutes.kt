@@ -31,7 +31,7 @@ fun Route.authRoutes(
                     post("/login") {
                         val request = call.receive<LoginRequest>()
                         val userAgent = call.request.headers["User-Agent"]
-                        val ipAddress = call.request.origin.remoteHost
+                        val ipAddress = call.clientIp()
 
                         val (response, refreshToken) = authService.login(request, userAgent, ipAddress)
 
@@ -54,7 +54,7 @@ fun Route.authRoutes(
                             ?: throw UnauthorizedException("Missing refresh token")
 
                         val userAgent = call.request.headers["User-Agent"]
-                        val ipAddress = call.request.origin.remoteHost
+                        val ipAddress = call.clientIp()
 
                         val (response, refreshToken) = authService.refresh(oldRefreshToken, userAgent, ipAddress)
 
@@ -89,7 +89,7 @@ fun Route.authRoutes(
                 }
 
                 authenticate("jwt-auth") {
-                    rateLimit(RateLimitName(USER_RATE_LIMIT)) {
+                    rateLimit(RateLimitName(AUTHENTICATED_RATE_LIMIT)) {
                         post("/logout-all") {
                             val userId = call.requireUserId()
 

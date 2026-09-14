@@ -15,8 +15,8 @@ fun Application.configureRouting(
     config: AppConfig
 ) {
     routing {
-        get("/debug-ping") {
-            call.respondText("Routing is definitely active!")
+        get("/healthcheck") {
+            call.respondText("Routing is active")
         }
         rateLimit(RateLimitName(GLOBAL_RATE_LIMIT)) {
             authRoutes(
