@@ -64,7 +64,6 @@ dependencies {
     implementation("com.zaxxer:HikariCP:${hikariVersion}")
 
     // SWAGGER
-    implementation("io.ktor:ktor-server-openapi:${ktorVersion}")
     implementation("io.ktor:ktor-server-swagger:${ktorVersion}")
 
     // CACHING
@@ -73,8 +72,4 @@ dependencies {
     // Flyway migrations
     implementation("org.flywaydb:flyway-core:11.20.3")
     implementation("org.flywaydb:flyway-database-postgresql:11.20.3")
-}
-
-tasks.shadowJar {
-    mergeServiceFiles()
 }

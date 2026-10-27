@@ -3,12 +3,12 @@ WORKDIR /app
 
 COPY . .
 RUN chmod +x ./gradlew
-RUN ./gradlew buildFatJar --no-daemon -x test
+RUN ./gradlew installDist --no-daemon -x test
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-COPY --from=build /app/build/libs/*-all.jar app.jar
+COPY --from=build /app/build/install/*/lib ./lib
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-cp", "lib/*", "io.ktor.server.netty.EngineMain"]
