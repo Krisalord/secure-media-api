@@ -49,8 +49,6 @@ The application relies on environment variables for secure configuration. You mu
 
 Create a .env file and add the following configuration:
 
-`.conf` files are gitignored. You must create `src/main/resources/application.conf` manually.
-
 ``` hocon 
 PORT=8080
 DB_URL=jdbc:postgresql://localhost:5432/auth_dev_db

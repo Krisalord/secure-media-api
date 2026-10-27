@@ -52,6 +52,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testImplementation("io.ktor:ktor-client-mock:${ktorVersion}")
+    testImplementation("org.testcontainers:junit-jupiter:${testcontainersVersion}")
+    testImplementation("org.testcontainers:postgresql:${testcontainersVersion}")
 
     // DATABASE (SQL & POSTGRES)
     implementation("org.jetbrains.exposed:exposed-core:${exposedVersion}")
@@ -61,7 +63,14 @@ dependencies {
     implementation("org.postgresql:postgresql:${postgresVersion}")
     implementation("com.zaxxer:HikariCP:${hikariVersion}")
 
+    // SWAGGER
+    implementation("io.ktor:ktor-server-openapi:${ktorVersion}")
+    implementation("io.ktor:ktor-server-swagger:${ktorVersion}")
 
-    testImplementation("org.testcontainers:junit-jupiter:${testcontainersVersion}")
-    testImplementation("org.testcontainers:postgresql:${testcontainersVersion}")
+    // CACHING
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+
+    // Flyway migrations
+    implementation("org.flywaydb:flyway-core:11.20.3")
+    implementation("org.flywaydb:flyway-database-postgresql:11.20.3")
 }

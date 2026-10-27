@@ -1,0 +1,246 @@
+openapi: 3.0.3
+info:
+  title: Secure Media API
+  version: 1.0.0
+  description: A secure portfolio backend featuring JWT rotation and AI integrations.
+servers:
+  - url: http://localhost:8080
+    description: Local Development Server
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+        '400':
+          description: Invalid input
+
+  /api/v1/auth/login:
+    post:
+      summary: Authenticate user and issue tokens
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful (Access token in body, Refresh token in HttpOnly cookie)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+
+  /api/v1/auth/refresh:
+    post:
+      summary: Refresh access token using HttpOnly cookie
+      tags: [Auth]
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Missing or invalid refresh token
+
+  /api/v1/auth/logout:
+    post:
+      summary: Logout the current session
+      tags: [Auth]
+      responses:
+        '204':
+          description: Session cleared successfully
+
+  /api/v1/auth/logout-all:
+    post:
+      summary: Revoke all sessions for the user
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: All sessions revoked
+        '401':
+          description: Unauthorized
+
+  /api/v1/media:
+    post:
+      summary: Log a new watched media item
+      tags: [Media]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMediaRequest'
+      responses:
+        '201':
+          description: Media logged successfully
+        '401':
+          description: Unauthorized
+    get:
+      summary: Get user's watch history
+      tags: [Media]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returns a list of watched media
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MediaResponse'
+        '401':
+          description: Unauthorized
+
+  /api/v1/media/{id}:
+    delete:
+      summary: Delete a logged media item
+      tags: [Media]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Media removed successfully
+        '400':
+          description: Invalid UUID format
+        '401':
+          description: Unauthorized
+
+  /api/v1/recommendations:
+    post:
+      summary: Get AI-generated recommendations
+      tags: [Recommendations]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecommendationRequest'
+      responses:
+        '200':
+          description: Successfully fetched recommendations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationResponse'
+        '400':
+          description: Invalid prompt type or missing custom input
+        '401':
+          description: Unauthorized
+        '502':
+          description: AI provider failure
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+    CreateMediaRequest:
+      type: object
+      required: [title, mediaType, rating]
+      properties:
+        title:
+          type: string
+        mediaType:
+          type: string
+        rating:
+          type: integer
+    MediaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        mediaType:
+          type: string
+        rating:
+          type: integer
+        watchedAt:
+          type: string
+          format: date-time
+        posterUrl:
+          type: string
+    RecommendationRequest:
+      type: object
+      required: [promptType]
+      properties:
+        promptType:
+          type: string
+          example: "DEFAULT"
+        customInput:
+          type: string
+          nullable: true
+    RecommendationResponse:
+      type: object
+      properties:
+        promptType:
+          type: string
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecommendationItem'
+        generatedAt:
+          type: string
+          format: date-time
+    RecommendationItem:
+      type: object
+      properties:
+        title:
+          type: string
+        mediaType:
+          type: string
+        reason:
+          type: string
