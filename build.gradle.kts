@@ -74,3 +74,7 @@ dependencies {
     implementation("org.flywaydb:flyway-core:11.20.3")
     implementation("org.flywaydb:flyway-database-postgresql:11.20.3")
 }
+
+tasks.shadowJar {
+    mergeServiceFiles()
+}
