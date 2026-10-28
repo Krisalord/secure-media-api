@@ -39,4 +39,50 @@ class AuthValidatorTest {
         }
         assertEquals("Password must be at least 8 characters", exception.message)
     }
+
+    @Test
+    fun `validateCredentials - should pass when password is exactly 8 characters`() {
+        assertDoesNotThrow {
+            AuthValidator.validateCredentials("valid@example.com", "12345678")
+        }
+    }
+
+    @Test
+    fun `validateCredentials - should throw when password is blank`() {
+        val exception = assertThrows<AuthValidationException> {
+            AuthValidator.validateCredentials("valid@example.com", "")
+        }
+        assertEquals("Password can not be blank", exception.message)
+    }
+
+    @Test
+    fun `validateCredentials - should throw when password is whitespace only`() {
+        val exception = assertThrows<AuthValidationException> {
+            AuthValidator.validateCredentials("valid@example.com", "        ")
+        }
+        assertEquals("Password can not be blank", exception.message)
+    }
+
+    @Test
+    fun `validateCredentials - should throw when email is empty string`() {
+        val exception = assertThrows<AuthValidationException> {
+            AuthValidator.validateCredentials("", "SecurePassword123!")
+        }
+        assertEquals("Email can not be blank", exception.message)
+    }
+
+    @Test
+    fun `validateCredentials - should pass when email contains only @ symbol`() {
+        // The validator only checks for blank and contains("@"), so "@" alone passes
+        assertDoesNotThrow {
+            AuthValidator.validateCredentials("@", "SecurePassword123!")
+        }
+    }
+
+    @Test
+    fun `validateCredentials - should pass with multiple @ symbols in email`() {
+        assertDoesNotThrow {
+            AuthValidator.validateCredentials("user@domain@extra.com", "SecurePassword123!")
+        }
+    }
 }

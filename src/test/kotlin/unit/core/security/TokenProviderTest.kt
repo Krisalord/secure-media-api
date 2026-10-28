@@ -7,9 +7,15 @@ import io.github.krisalord.core.security.TokenProvider
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.util.Base64
+import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class TokenProviderTest {
 
@@ -72,5 +78,59 @@ class TokenProviderTest {
 
         assertEquals(hash1, hash2)
         assertEquals(hash1.length, 64)
+    }
+
+    @Test
+    fun `hashRefreshToken - different tokens should produce different hashes`() {
+        val hash1 = tokenProvider.hashRefreshToken("token-one")
+        val hash2 = tokenProvider.hashRefreshToken("token-two")
+
+        assertNotEquals(hash1, hash2)
+    }
+
+    @Test
+    fun `generateRefreshToken - should produce unique tokens on each call`() {
+        val token1 = tokenProvider.generateRefreshToken()
+        val token2 = tokenProvider.generateRefreshToken()
+
+        assertNotEquals(token1, token2)
+    }
+
+    @Test
+    fun `buildRefreshSession - should create a valid session model`() {
+        val userId = UUID.randomUUID()
+        val rawToken = "raw-refresh-token"
+        val userAgent = "TestBrowser/1.0"
+        val ipAddress = "192.168.1.1"
+
+        val session = tokenProvider.buildRefreshSession(userId, rawToken, userAgent, ipAddress)
+
+        assertNull(session.id)
+        assertEquals(userId, session.userId)
+        assertEquals(tokenProvider.hashRefreshToken(rawToken), session.refreshTokenHash)
+        assertFalse(session.isRevoked)
+        assertEquals(userAgent, session.userAgent)
+        assertEquals(ipAddress, session.ipAddress)
+        assertTrue(session.expiresAt.isAfter(Instant.now()))
+    }
+
+    @Test
+    fun `buildRefreshSession - should handle null userAgent and ipAddress`() {
+        val userId = UUID.randomUUID()
+        val rawToken = "raw-refresh-token"
+
+        val session = tokenProvider.buildRefreshSession(userId, rawToken, null, null)
+
+        assertNotNull(session)
+        assertNull(session.userAgent)
+        assertNull(session.ipAddress)
+    }
+
+    @Test
+    fun `verifier - should verify token contains correct audience`() {
+        val token = tokenProvider.generateAccessToken(dummyUser)
+        val decodedJwt = tokenProvider.verifier().verify(token)
+
+        assertTrue(decodedJwt.audience.contains("test-audience"))
     }
 }

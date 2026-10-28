@@ -2,6 +2,7 @@ package io.github.krisalord.unit.core.security
 
 import io.github.krisalord.core.security.PasswordHashing
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
@@ -43,5 +44,53 @@ class PasswordHashingTest {
         val hashTwo = PasswordHashing.hash(password)
 
         assertNotEquals(hashOne, hashTwo)
+    }
+
+    @Test
+    fun `hash - should handle empty password`() {
+        val hash = PasswordHashing.hash("")
+        assertTrue(hash.startsWith("$2a$") || hash.startsWith("$2b$"))
+        assertTrue(PasswordHashing.verify("", hash))
+        assertFalse(PasswordHashing.verify("not-empty", hash))
+    }
+
+    @Test
+    fun `hash - should handle special characters in password`() {
+        val password = "P@\$\$w0rd!#%^&*()_+-=[]{}|;:',.<>?/~`"
+        val hash = PasswordHashing.hash(password)
+
+        assertTrue(PasswordHashing.verify(password, hash))
+    }
+
+    @Test
+    fun `hash - should handle very long password`() {
+        // BCrypt truncates passwords at 72 bytes, so two different long passwords
+        // that share the first 72 bytes will produce the same hash
+        val password = "a".repeat(1000)
+        val hash = PasswordHashing.hash(password)
+
+        assertTrue(PasswordHashing.verify(password, hash))
+    }
+
+    @Test
+    fun `hash - should handle Unicode characters in password`() {
+        val password = "пароль🔐密码"
+        val hash = PasswordHashing.hash(password)
+
+        assertTrue(PasswordHashing.verify(password, hash))
+    }
+
+    @Test
+    fun `verify - should throw exception for empty hash`() {
+        assertThrows<Exception> {
+            PasswordHashing.verify("somePassword", "")
+        }
+    }
+
+    @Test
+    fun `verify - should throw exception for invalid hash format`() {
+        assertThrows<Exception> {
+            PasswordHashing.verify("somePassword", "not-a-valid-hash")
+        }
     }
 }
