@@ -15,7 +15,7 @@ import kotlin.test.assertNull
 
 class AuthRepositoryTest : BaseIntegrationTest() {
 
-    private val userCache = Caffeine.newBuilder().build<String, UserModel?>()
+    private val userCache = Caffeine.newBuilder().build<String, UserModel>()
     private val authRepository = AuthRepository(userCache)
 
     @Test

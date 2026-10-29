@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 
 class RefreshSessionRepositoryTest : BaseIntegrationTest() {
 
-    private val userCache = Caffeine.newBuilder().build<String, UserModel?>()
+    private val userCache = Caffeine.newBuilder().build<String, UserModel>()
     private val authRepository = AuthRepository(userCache)
     private val refreshSessionRepository = RefreshSessionRepository()
 

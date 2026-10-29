@@ -34,7 +34,6 @@ fun Application.buildDependencies(
         }
     }
 
-    // Caffeine caches with appropriate TTLs
     val posterUrlCache = Caffeine.newBuilder()
         .maximumSize(500)
         .expireAfterWrite(24, TimeUnit.HOURS)
@@ -43,7 +42,7 @@ fun Application.buildDependencies(
     val userCache = Caffeine.newBuilder()
         .maximumSize(100)
         .expireAfterWrite(5, TimeUnit.MINUTES)
-        .build<String, UserModel?>()
+        .build<String, UserModel>()
 
     val watchHistoryCache = Caffeine.newBuilder()
         .maximumSize(100)

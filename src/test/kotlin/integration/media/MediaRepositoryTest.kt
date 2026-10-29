@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 
 class MediaRepositoryTest : BaseIntegrationTest() {
 
-    private val userCache = Caffeine.newBuilder().build<String, UserModel?>()
+    private val userCache = Caffeine.newBuilder().build<String, UserModel>()
     private val authRepository = AuthRepository(userCache)
     private val watchHistoryCache = Caffeine.newBuilder().build<UUID, List<WatchedMediaModel>>()
     private val mediaRepository = MediaRepository(watchHistoryCache)

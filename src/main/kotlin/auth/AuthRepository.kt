@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 
 class AuthRepository(
-    private val userCache: Cache<String, UserModel?>
+    private val userCache: Cache<String, UserModel>
 ) {
     private fun toModel(row: ResultRow): UserModel = UserModel(
         id = row[UsersTable.id].value,
@@ -43,13 +43,17 @@ class AuthRepository(
     }
 
     fun findByEmail(email: String): UserModel? {
-        return userCache.get(email) {
-            UsersTable
-                .selectAll()
-                .where { UsersTable.email eq email }
-                .map { toModel(it) }
-                .singleOrNull()
-        }
+        val cached = userCache.getIfPresent(email)
+        if (cached != null) return cached
+
+        val user = UsersTable
+            .selectAll()
+            .where { UsersTable.email eq email }
+            .map { toModel(it) }
+            .singleOrNull()
+
+        user?.let { userCache.put(email, it) }
+        return user
     }
 
     fun findById(userId: UUID): UserModel? {

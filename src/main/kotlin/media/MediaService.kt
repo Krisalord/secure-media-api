@@ -89,7 +89,6 @@ class MediaService(
             }
         }
 
-        // Only cache non-null results; Caffeine does not support null values
         result?.let { posterUrlCache.put(cacheKey, it) }
         return result
     }
