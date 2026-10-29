@@ -1,5 +1,6 @@
 package io.github.krisalord.media
 
+import com.github.benmanes.caffeine.cache.Cache
 import io.github.krisalord.core.database.dbQuery
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -14,7 +15,8 @@ import java.util.UUID
 class MediaService(
     private val mediaRepository: MediaRepository,
     private val httpClient: io.ktor.client.HttpClient,
-    private val tmdbApiKey: String
+    private val tmdbApiKey: String,
+    private val posterUrlCache: Cache<String, String>
 ) {
     suspend fun logMedia(userId: UUID, request: CreateMediaRequest): WatchedMediaModel {
         MediaValidator.validateLogRequest(request)
@@ -46,33 +48,49 @@ class MediaService(
     }
 
     private suspend fun fetchPosterUrl(title: String, type: String): String? {
-        if (tmdbApiKey.isBlank()) return null
-        return try {
-            val searchType = if (type == "MOVIE") "movie" else "tv"
-            val response = httpClient.get("https://api.themoviedb.org/3/search/$searchType") {
-                url {
-                    parameters.append("api_key", tmdbApiKey)
-                    parameters.append("query", title)
-                }
-            }
+        val cacheKey = "$title|$type"
+        val cached = posterUrlCache.getIfPresent(cacheKey)
+        if (cached != null) return cached
 
-            if (response.status.isSuccess()) {
-                val jsonBody = response.bodyAsText()
-                val json = Json { ignoreUnknownKeys = true }
-                val jsonObject = json.parseToJsonElement(jsonBody).jsonObject
-                val results = jsonObject["results"]?.jsonArray
-
-                if (!results.isNullOrEmpty()) {
-                    val firstResult = results[0].jsonObject
-                    val posterPath = firstResult["poster_path"]?.jsonPrimitive?.contentOrNull
-                    if (posterPath != null) {
-                        return "https://image.tmdb.org/t/p/w500$posterPath"
+        val result = if (tmdbApiKey.isBlank()) {
+            null
+        } else {
+            try {
+                val searchType = if (type == "MOVIE") "movie" else "tv"
+                val response = httpClient.get("https://api.themoviedb.org/3/search/$searchType") {
+                    url {
+                        parameters.append("api_key", tmdbApiKey)
+                        parameters.append("query", title)
                     }
                 }
+
+                if (response.status.isSuccess()) {
+                    val jsonBody = response.bodyAsText()
+                    val json = Json { ignoreUnknownKeys = true }
+                    val jsonObject = json.parseToJsonElement(jsonBody).jsonObject
+                    val results = jsonObject["results"]?.jsonArray
+
+                    if (!results.isNullOrEmpty()) {
+                        val firstResult = results[0].jsonObject
+                        val posterPath = firstResult["poster_path"]?.jsonPrimitive?.contentOrNull
+                        if (posterPath != null) {
+                            "https://image.tmdb.org/t/p/w500$posterPath"
+                        } else {
+                            null
+                        }
+                    } else {
+                        null
+                    }
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                null
             }
-            null
-        } catch (e: Exception) {
-            null
         }
+
+        // Only cache non-null results; Caffeine does not support null values
+        result?.let { posterUrlCache.put(cacheKey, it) }
+        return result
     }
 }

@@ -1,5 +1,6 @@
 package io.github.krisalord.auth
 
+import com.github.benmanes.caffeine.cache.Cache
 import io.github.krisalord.core.exceptions.DatabaseException
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
@@ -8,7 +9,9 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 
-class AuthRepository {
+class AuthRepository(
+    private val userCache: Cache<String, UserModel?>
+) {
     private fun toModel(row: ResultRow): UserModel = UserModel(
         id = row[UsersTable.id].value,
         email = row[UsersTable.email],
@@ -40,11 +43,13 @@ class AuthRepository {
     }
 
     fun findByEmail(email: String): UserModel? {
-        return UsersTable
-            .selectAll()
-            .where { UsersTable.email eq email }
-            .map { toModel(it) }
-            .singleOrNull()
+        return userCache.get(email) {
+            UsersTable
+                .selectAll()
+                .where { UsersTable.email eq email }
+                .map { toModel(it) }
+                .singleOrNull()
+        }
     }
 
     fun findById(userId: UUID): UserModel? {

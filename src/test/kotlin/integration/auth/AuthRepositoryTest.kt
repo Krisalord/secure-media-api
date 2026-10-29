@@ -1,5 +1,6 @@
 package io.github.krisalord.integration.auth
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.krisalord.auth.AuthRepository
 import io.github.krisalord.auth.UserAlreadyExistsException
 import io.github.krisalord.auth.UserModel
@@ -14,7 +15,8 @@ import kotlin.test.assertNull
 
 class AuthRepositoryTest : BaseIntegrationTest() {
 
-    private val authRepository = AuthRepository()
+    private val userCache = Caffeine.newBuilder().build<String, UserModel?>()
+    private val authRepository = AuthRepository(userCache)
 
     @Test
     fun `create - should insert a new user and map it back correctly`() = runSecureTestApplication {

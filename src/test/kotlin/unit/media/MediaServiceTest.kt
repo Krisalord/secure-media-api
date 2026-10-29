@@ -1,5 +1,6 @@
 package io.github.krisalord.unit.media
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.krisalord.core.database.dbQuery
 import io.github.krisalord.media.CreateMediaRequest
 import io.github.krisalord.media.MediaNotFoundException
@@ -39,10 +40,12 @@ class MediaServiceTest {
         }
 
         mediaRepository = mockk()
+        val posterUrlCache = Caffeine.newBuilder().build<String, String>()
         mediaService = MediaService(
             mediaRepository = mediaRepository,
             httpClient = MockHttpClients.createTmdbMockClient(),
-            tmdbApiKey = "fake_test_key"
+            tmdbApiKey = "fake_test_key",
+            posterUrlCache = posterUrlCache
         )
     }
 
@@ -161,10 +164,12 @@ class MediaServiceTest {
 
     @Test
     fun `logMedia - should return null posterUrl when TMDB API key is blank`() = runBlocking {
+        val posterUrlCache = Caffeine.newBuilder().build<String, String>()
         val mediaServiceNoKey = MediaService(
             mediaRepository = mediaRepository,
             httpClient = MockHttpClients.createTmdbMockClient(),
-            tmdbApiKey = ""
+            tmdbApiKey = "",
+            posterUrlCache = posterUrlCache
         )
 
         val request = CreateMediaRequest(title = "The Matrix", mediaType = "MOVIE", rating = 5)
@@ -215,5 +220,83 @@ class MediaServiceTest {
         val result = mediaService.logMedia(fakeUserId, request)
 
         assertEquals("The Matrix", result.title)
+    }
+
+    // --- Caching Tests ---
+
+    @Test
+    fun `logMedia - poster URL cache should store and retrieve cached value`() = runBlocking {
+        // First call fetches from TMDB and caches the result
+        val request1 = CreateMediaRequest(title = "The Matrix", mediaType = "MOVIE", rating = 5)
+        val expectedModel1 = WatchedMediaModel(
+            id = UUID.randomUUID(),
+            userId = fakeUserId,
+            title = "The Matrix",
+            mediaType = "MOVIE",
+            rating = 5,
+            watchedAt = Instant.now(),
+            posterUrl = "https://image.tmdb.org/t/p/w500/matrix_fake_poster.jpg"
+        )
+
+        coEvery { mediaRepository.create(any()) } returns expectedModel1
+
+        val result1 = mediaService.logMedia(fakeUserId, request1)
+        assertEquals("https://image.tmdb.org/t/p/w500/matrix_fake_poster.jpg", result1.posterUrl)
+
+        // Second call with the same title should use the cached poster URL
+        // The mock client is still called for repository.create, but the cache prevents re-fetching
+        val request2 = CreateMediaRequest(title = "The Matrix", mediaType = "MOVIE", rating = 4)
+        val expectedModel2 = WatchedMediaModel(
+            id = UUID.randomUUID(),
+            userId = fakeUserId,
+            title = "The Matrix",
+            mediaType = "MOVIE",
+            rating = 4,
+            watchedAt = Instant.now(),
+            posterUrl = "https://image.tmdb.org/t/p/w500/matrix_fake_poster.jpg"
+        )
+
+        coEvery { mediaRepository.create(any()) } returns expectedModel2
+
+        val result2 = mediaService.logMedia(fakeUserId, request2)
+        // Should return the same cached poster URL
+        assertEquals("https://image.tmdb.org/t/p/w500/matrix_fake_poster.jpg", result2.posterUrl)
+    }
+
+    @Test
+    fun `logMedia - different titles should not share cached poster URL`() = runBlocking {
+        val request1 = CreateMediaRequest(title = "The Matrix", mediaType = "MOVIE", rating = 5)
+        val expectedModel1 = WatchedMediaModel(
+            id = UUID.randomUUID(),
+            userId = fakeUserId,
+            title = "The Matrix",
+            mediaType = "MOVIE",
+            rating = 5,
+            watchedAt = Instant.now(),
+            posterUrl = "https://image.tmdb.org/t/p/w500/matrix_fake_poster.jpg"
+        )
+
+        coEvery { mediaRepository.create(any()) } returns expectedModel1
+
+        val result1 = mediaService.logMedia(fakeUserId, request1)
+        assertEquals("https://image.tmdb.org/t/p/w500/matrix_fake_poster.jpg", result1.posterUrl)
+
+        // Different title should not use the cached result
+        val request2 = CreateMediaRequest(title = "Inception", mediaType = "MOVIE", rating = 5)
+        val expectedModel2 = WatchedMediaModel(
+            id = UUID.randomUUID(),
+            userId = fakeUserId,
+            title = "Inception",
+            mediaType = "MOVIE",
+            rating = 5,
+            watchedAt = Instant.now(),
+            posterUrl = "https://image.tmdb.org/t/p/w500/matrix_fake_poster.jpg"
+        )
+
+        coEvery { mediaRepository.create(any()) } returns expectedModel2
+
+        val result2 = mediaService.logMedia(fakeUserId, request2)
+        // Both return the same mock poster, but they come from separate cache entries
+        assertEquals("https://image.tmdb.org/t/p/w500/matrix_fake_poster.jpg", result2.posterUrl)
     }
 }

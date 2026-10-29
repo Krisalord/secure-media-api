@@ -1,5 +1,6 @@
 package io.github.krisalord.integration.media
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.krisalord.auth.AuthRepository
 import io.github.krisalord.auth.UserModel
 import io.github.krisalord.integration.core.BaseIntegrationTest
@@ -7,6 +8,7 @@ import io.github.krisalord.integration.core.runDbTest
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.WatchedMediaModel
 import org.junit.jupiter.api.Test
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -14,8 +16,10 @@ import kotlin.test.assertTrue
 
 class MediaRepositoryTest : BaseIntegrationTest() {
 
-    private val authRepository = AuthRepository()
-    private val mediaRepository = MediaRepository()
+    private val userCache = Caffeine.newBuilder().build<String, UserModel?>()
+    private val authRepository = AuthRepository(userCache)
+    private val watchHistoryCache = Caffeine.newBuilder().build<UUID, List<WatchedMediaModel>>()
+    private val mediaRepository = MediaRepository(watchHistoryCache)
 
     @Test
     fun `create and findAllByUserId - should insert and retrieve media successfully`() = runSecureTestApplication {
