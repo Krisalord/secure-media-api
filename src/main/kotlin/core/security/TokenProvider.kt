@@ -26,6 +26,7 @@ class TokenProvider(
             .withIssuer(accessTokenSettings.issuer)
             .withAudience(accessTokenSettings.audience)
             .withSubject(user.id.toString())
+            .withClaim("email", user.email)
             .withClaim("role", user.role)
             .withIssuedAt(Date())
             .withExpiresAt(Date(System.currentTimeMillis() + accessTokenSettings.validityMs))

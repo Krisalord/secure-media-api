@@ -10,14 +10,16 @@ Check out the live frontend application powered by this API, fully deployed on R
 
 *(Note: Since this is hosted on a free Render tier, the backend may take ~50 seconds to spin up on the first request).*
 
-## 1 Features
+## 1. Features
 
 - User registration and login
 - CRUD Media management
+- AI-powered recommendations via Gemini
 - Input sanitization and validation
 - Centralized error handling
+- Response caching with Caffeine (poster URLs, user lookups, watch history)
 - Modular, maintainable architecture
-- Unit and API route testing with MockK
+- Comprehensive unit and integration tests
 
 ## 2. Security & Authentication
 
@@ -31,16 +33,18 @@ This API uses a high-security dual-token architecture to protect users from XSS 
 ## 3. Tech Stack
 * **Core:** Kotlin, Ktor Server & Client
 * **Database:** PostgreSQL, Exposed ORM, HikariCP Connection Pooling
+* **Caching:** Caffeine
 * **AI Integration:** Google Generative Language API (Gemini)
+* **External API:** TMDB (poster URL lookups)
 * **Security:** BCrypt Password Hashing, HMAC SHA-256 Token Hashing
 * **Testing:** JUnit 5, MockK, Ktor Test Host, Testcontainers
 
-## 4 Quick Start
+## 4. Quick Start
 
 1. Clone & Configure
 ```bash
-  git clone https://github.com/krisalord/secure-media-api.git
-  cd secure-media-api
+git clone https://github.com/krisalord/secure-media-api.git
+cd secure-media-api
 ```
 
 2. Set up .env
@@ -49,7 +53,7 @@ The application relies on environment variables for secure configuration. You mu
 
 Create a .env file and add the following configuration:
 
-``` hocon 
+```hocon
 PORT=8080
 DB_URL=jdbc:postgresql://localhost:5432/auth_dev_db
 DB_USER=dev_user
@@ -64,38 +68,29 @@ TMDB_API_KEY=your_tmdb_api_key_here
 ```
 
 3. Boot the database
-```
+```bash
 docker-compose up -d
 ```
 
 4. Run the application
 ```bash
-  /gradlew run
+./gradlew run
 ```
 
-## 5 API Reference
+## 5. API Reference
 
-1. Authentication endpoints
+Interactive API documentation is available via **Swagger UI** at `/swagger` when the server is running.
 
-| Method   | Endpoint                | Description                       | Auth Required        |
-|----------|-------------------------|-----------------------------------|----------------------|
-| POST     | /api/v1/auth/register   | Register a new user               | No                   |
-| POST     | /api/v1/auth/login      | Authenticate & receive tokens     | No                   |
-| POST     | /api/v1/auth/refresh    | Refresh JWT using HttpOnly Cookie | No (Requires Cookie) |
-| POST     | /api/v1/auth/logout     | Log out of the current device     | No (Requires Cookie) |
-| POST     | /api/v1/auth/logout-all | Revoke all active devices         | Yes (Bearer JWT)     |
+The OpenAPI spec (`openapi.yaml`) covers all endpoints, request/response schemas, and authentication details.
 
-2. Media endpoints
+## 6. Testing
 
-| Method | Endpoint           | Description                       | Auth Required     |
-|--------|--------------------|-----------------------------------|-------------------|
-| POST   | /api/v1/media      | Log a watched movie or TV show    | Yes (Bearer JWT)  |
-| GET    | /api/v1/media      | Retrieve user's watch history     | Yes (Bearer JWT)  |
-| DELETE | /api/v1/media/{id} | Delete a media entry from history | Yes (Bearer JWT)  |
+Run unit tests:
+```bash
+./gradlew test --tests "io.github.krisalord.unit.*"
+```
 
-
-3. AI Recommendation endpoints
-
-| Method | Endpoint                | Description                                  | Auth Required    |
-|--------|-------------------------|----------------------------------------------|------------------|
-| POST   | /api/v1/recommendations | Generate AI recommendations based on history | Yes (Bearer JWT) |
+Run integration tests (requires Docker):
+```bash
+./gradlew test --tests "io.github.krisalord.integration.*"
+```
