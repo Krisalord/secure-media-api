@@ -17,7 +17,7 @@ fun Application.module() {
     configureAuthentication(dependencies.tokenProvider)
     configureRateLimiting()
     configureRouting(dependencies, config)
-    configureCors(config)
+    configureCors()
 }
 
 fun main(args: Array<String>) {
