@@ -1,14 +1,15 @@
 package io.github.krisalord.plugins
 
+import io.github.krisalord.core.config.AppConfig
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.cors.routing.CORS
 
-fun Application.configureCors() {
+fun Application.configureCors(config: AppConfig) {
     install(CORS) {
-        allowedFrontendHosts().forEach { host ->
+        config.cors.allowedFrontendHosts.forEach { host ->
             allowHost(
                 host,
                 schemes = listOf("http", "https")
@@ -21,21 +22,5 @@ fun Application.configureCors() {
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
-
-        allowHost("localhost:5173")
-        allowHost("secure-media-frontend.onrender.com")
     }
 }
-
-private fun allowedFrontendHosts(): List<String> =
-    System.getenv("CORS_ALLOWED_HOSTS")
-        ?.split(",")
-        ?.map { it.trim()
-            .removePrefix("http://")
-            .removePrefix("https://")
-            .trimEnd('/')
-        }
-        ?.filter { it.isNotBlank() }
-        ?: listOf(
-            "localhost:3000",
-        )

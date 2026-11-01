@@ -1,6 +1,6 @@
 package io.github.krisalord.auth
 
-import io.github.krisalord.core.exceptions.DatabaseException
+import io.github.krisalord.plugins.DatabaseException
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and

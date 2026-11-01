@@ -4,12 +4,10 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.krisalord.auth.AuthRepository
 import io.github.krisalord.auth.AuthService
 import io.github.krisalord.auth.RefreshSessionRepository
-import io.github.krisalord.auth.UserModel
 import io.github.krisalord.core.config.AppConfig
 import io.github.krisalord.core.security.TokenProvider
 import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.MediaService
-import io.github.krisalord.media.WatchedMediaModel
 import io.github.krisalord.recommendation.RecommendationService
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -39,19 +37,9 @@ fun Application.buildDependencies(
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String, String>()
 
-    val userCache = Caffeine.newBuilder()
-        .maximumSize(100)
-        .expireAfterWrite(5, TimeUnit.MINUTES)
-        .build<String, UserModel>()
-
-    val watchHistoryCache = Caffeine.newBuilder()
-        .maximumSize(100)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build<java.util.UUID, List<WatchedMediaModel>>()
-
-    val authRepository = AuthRepository(userCache)
+    val authRepository = AuthRepository()
     val refreshSessionRepository = RefreshSessionRepository()
-    val mediaRepository = MediaRepository(watchHistoryCache)
+    val mediaRepository = MediaRepository()
 
     val tokenProvider = TokenProvider(
         accessTokenSettings = config.auth.accessToken,

@@ -1,6 +1,5 @@
 package io.github.krisalord.integration.auth
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.krisalord.auth.AuthRepository
 import io.github.krisalord.auth.RefreshSessionModel
 import io.github.krisalord.auth.RefreshSessionRepository
@@ -17,8 +16,7 @@ import kotlin.test.assertTrue
 
 class RefreshSessionRepositoryTest : BaseIntegrationTest() {
 
-    private val userCache = Caffeine.newBuilder().build<String, UserModel>()
-    private val authRepository = AuthRepository(userCache)
+    private val authRepository = AuthRepository()
     private val refreshSessionRepository = RefreshSessionRepository()
 
     private fun createDummyUser(): UserModel {
