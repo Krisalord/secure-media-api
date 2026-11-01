@@ -9,18 +9,29 @@ import io.ktor.server.plugins.cors.routing.CORS
 
 fun Application.configureCors(config: AppConfig) {
     install(CORS) {
-        config.cors.allowedFrontendHosts.forEach { host ->
-            allowHost(
-                host,
-                schemes = listOf("http", "https")
-            )
-        }
-        allowCredentials = true
-        allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.Authorization)
+        allowHeader(HttpHeaders.ContentType)
+        allowCredentials = true
+
+        allowMethod(HttpMethod.Options)
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
+
+        val defaultDevHosts = listOf("localhost:5173", "localhost:3000")
+        val configuredHosts = config.cors.allowedFrontendHosts
+
+        (defaultDevHosts + configuredHosts).forEach { rawHost ->
+            val cleanHost = rawHost
+                .removePrefix("http://")
+                .removePrefix("https://")
+                .trimEnd('/')
+                .trim()
+
+            if (cleanHost.isNotBlank()) {
+                allowHost(cleanHost, schemes = listOf("http", "https"))
+            }
+        }
     }
 }
