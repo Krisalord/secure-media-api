@@ -11,7 +11,10 @@ import io.github.krisalord.media.MediaService
 import io.github.krisalord.recommendation.RecommendationService
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.*
 import java.util.concurrent.TimeUnit
@@ -62,9 +65,28 @@ fun Application.buildDependencies(
     )
 
 
+    val recommendationHttpClient = HttpClient(CIO) {
+        install(ClientContentNegotiation) {
+            json(kotlinx.serialization.json.Json { ignoreUnknownKeys = true })
+        }
+        install(HttpRequestRetry) {
+            maxRetries = 2
+            retryIf { _, response ->
+                response.status == HttpStatusCode.TooManyRequests ||
+                    response.status == HttpStatusCode.ServiceUnavailable ||
+                    response.status == HttpStatusCode.GatewayTimeout
+            }
+            exponentialDelay()
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 15_000
+            connectTimeoutMillis = 5_000
+        }
+    }
+
     val recommendationService = RecommendationService(
         mediaRepository = mediaRepository,
-        httpClient = httpClient,
+        httpClient = recommendationHttpClient,
         geminiApiKey = config.aiConfig.geminiApiKey
     )
 

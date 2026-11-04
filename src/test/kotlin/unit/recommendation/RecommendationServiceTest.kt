@@ -7,12 +7,18 @@ import io.github.krisalord.recommendation.RecommendationRequest
 import io.github.krisalord.recommendation.RecommendationService
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -48,6 +54,33 @@ class RecommendationServiceTest {
         val mockClient = HttpClient(engine) {
             install(ContentNegotiation) {
                 json(Json { ignoreUnknownKeys = true })
+            }
+        }
+
+        return RecommendationService(
+            mediaRepository = mediaRepository,
+            httpClient = mockClient,
+            geminiApiKey = fakeApiKey
+        )
+    }
+
+    private fun createServiceWithRetryAndTimeout(engine: MockEngine): RecommendationService {
+        val mockClient = HttpClient(engine) {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+            install(HttpRequestRetry) {
+                maxRetries = 2
+                retryIf { _, response ->
+                    response.status == HttpStatusCode.TooManyRequests ||
+                        response.status == HttpStatusCode.ServiceUnavailable ||
+                        response.status == HttpStatusCode.GatewayTimeout
+                }
+                exponentialDelay()
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 15_000
+                connectTimeoutMillis = 5_000
             }
         }
 
@@ -116,7 +149,7 @@ class RecommendationServiceTest {
     }
 
     @Test
-    fun `buildPrompt - should correctly format watch history into the prompt`() {
+    fun `buildPrompt - should correctly format watch history as JSON`() {
         val service = createServiceWithMockEngine(MockEngine { respondOk() })
 
         val history = listOf(
@@ -146,9 +179,127 @@ class RecommendationServiceTest {
             customInput = null
         )
 
-        assertTrue(prompt.contains("- Title: The Matrix, Type: MOVIE, Rating: 5/5"))
-        assertTrue(prompt.contains("- Title: Arcane, Type: TV_SHOW, Rating: 4/5"))
+        assertTrue(prompt.contains("\"title\":\"The Matrix\""))
+        assertTrue(prompt.contains("\"mediaType\":\"MOVIE\""))
+        assertTrue(prompt.contains("\"rating\":5"))
+        assertTrue(prompt.contains("\"title\":\"Arcane\""))
         assertTrue(prompt.contains("Suggest 3 diverse movies or shows"))
+    }
+
+    @Test
+    fun `buildPrompt - should sanitize titles with special characters`() {
+        val service = createServiceWithMockEngine(MockEngine { respondOk() })
+
+        val history = listOf(
+            WatchedMediaModel(
+                id = UUID.randomUUID(),
+                userId = fakeUserId,
+                title = "Movie \"Quotes\" Here",
+                mediaType = "MOVIE",
+                rating = 4,
+                watchedAt = Instant.now(),
+                posterUrl = null
+            ),
+            WatchedMediaModel(
+                id = UUID.randomUUID(),
+                userId = fakeUserId,
+                title = "Show {with} braces",
+                mediaType = "TV_SHOW",
+                rating = 3,
+                watchedAt = Instant.now(),
+                posterUrl = null
+            ),
+            WatchedMediaModel(
+                id = UUID.randomUUID(),
+                userId = fakeUserId,
+                title = "Title\nwith\nnewlines",
+                mediaType = "MOVIE",
+                rating = 5,
+                watchedAt = Instant.now(),
+                posterUrl = null
+            ),
+            WatchedMediaModel(
+                id = UUID.randomUUID(),
+                userId = fakeUserId,
+                title = "Title\twith\ttabs",
+                mediaType = "MOVIE",
+                rating = 4,
+                watchedAt = Instant.now(),
+                posterUrl = null
+            ),
+            WatchedMediaModel(
+                id = UUID.randomUUID(),
+                userId = fakeUserId,
+                title = "  Trimmed  ",
+                mediaType = "MOVIE",
+                rating = 3,
+                watchedAt = Instant.now(),
+                posterUrl = null
+            )
+        )
+
+        val prompt = service.buildPrompt(
+            history = history,
+            type = PromptType.DEFAULT,
+            customInput = null
+        )
+
+        // Verify the JSON is parseable
+        val json = Json { ignoreUnknownKeys = true }
+        val jsonSubstring = extractJsonArray(prompt)
+        val parsed = json.parseToJsonElement(jsonSubstring).jsonArray
+        assertEquals(5, parsed.size)
+
+        val titles = parsed.map { it.jsonObject["title"]?.jsonPrimitive?.content }
+
+        // Quotes should be escaped in JSON
+        assertTrue(titles.contains("Movie \"Quotes\" Here"))
+
+        // Braces should be preserved
+        assertTrue(titles.contains("Show {with} braces"))
+
+        // Newlines should be stripped
+        assertTrue(titles.contains("Titlewithnewlines"))
+
+        // Tabs should be stripped
+        assertTrue(titles.contains("Titlewithtabs"))
+
+        // Whitespace should be trimmed
+        assertTrue(titles.contains("Trimmed"))
+    }
+
+    @Test
+    fun `buildPrompt - should produce valid JSON structure in prompt`() {
+        val service = createServiceWithMockEngine(MockEngine { respondOk() })
+
+        val history = listOf(
+            WatchedMediaModel(
+                id = UUID.randomUUID(),
+                userId = fakeUserId,
+                title = "Normal Title",
+                mediaType = "MOVIE",
+                rating = 5,
+                watchedAt = Instant.now(),
+                posterUrl = null
+            )
+        )
+
+        val prompt = service.buildPrompt(
+            history = history,
+            type = PromptType.DEFAULT,
+            customInput = null
+        )
+
+        // Extract and validate the JSON array from the prompt
+        val json = Json { ignoreUnknownKeys = true }
+        val jsonSubstring = extractJsonArray(prompt)
+
+        val parsed = json.parseToJsonElement(jsonSubstring).jsonArray
+        assertEquals(1, parsed.size)
+        val entry = parsed[0].jsonObject
+        assertEquals("Normal Title", entry["title"]?.jsonPrimitive?.content)
+        assertEquals("MOVIE", entry["mediaType"]?.jsonPrimitive?.content)
+        assertEquals(5, entry["rating"]?.jsonPrimitive?.content?.toInt())
     }
 
     @Test
@@ -317,5 +468,98 @@ class RecommendationServiceTest {
 
         assertNotNull(response.generatedAt)
         assertTrue(response.generatedAt.isNotEmpty())
+    }
+
+    @Test
+    fun `getRecommendations - should return 503 on network timeout`() = runBlocking {
+        val mockEngine = MockEngine {
+            respondError(HttpStatusCode.GatewayTimeout)
+        }
+
+        val service = createServiceWithRetryAndTimeout(mockEngine)
+        val request = RecommendationRequest(promptType = "DEFAULT")
+
+        coEvery { mediaRepository.findAllByUserId(fakeUserId) } returns emptyList()
+
+        val exception = assertThrows<io.github.krisalord.recommendation.AiProviderException> {
+            service.getRecommendations(fakeUserId, request)
+        }
+
+        assertTrue(exception.message!!.contains("Gemini engine invocation failed with status code: 504"))
+    }
+
+    @Test
+    fun `getRecommendations - should retry on 429 and succeed after retries exhausted`() = runBlocking {
+        val rawGeminiResponse = """
+            {
+              "candidates": [
+                {
+                  "content": {
+                    "parts": [
+                      {
+                        "text": "[{\"title\": \"Retry Success\", \"mediaType\": \"MOVIE\", \"reason\": \"After retry.\"}]"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+        """.trimIndent()
+
+        var requestCount = 0
+        val mockEngine = MockEngine {
+            requestCount++
+            if (requestCount <= 2) {
+                respondError(HttpStatusCode.TooManyRequests)
+            } else {
+                respond(
+                    content = rawGeminiResponse,
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                )
+            }
+        }
+
+        val service = createServiceWithRetryAndTimeout(mockEngine)
+        val request = RecommendationRequest(promptType = "DEFAULT")
+
+        coEvery { mediaRepository.findAllByUserId(fakeUserId) } returns emptyList()
+
+        val response = service.getRecommendations(fakeUserId, request)
+
+        assertEquals(1, response.recommendations.size)
+        assertEquals("Retry Success", response.recommendations.first().title)
+        assertEquals(3, requestCount)
+    }
+
+    @Test
+    fun `getRecommendations - should exhaust retries on repeated 503 and throw 503`() = runBlocking {
+        val mockEngine = MockEngine {
+            respondError(HttpStatusCode.ServiceUnavailable)
+        }
+
+        val service = createServiceWithRetryAndTimeout(mockEngine)
+        val request = RecommendationRequest(promptType = "DEFAULT")
+
+        coEvery { mediaRepository.findAllByUserId(fakeUserId) } returns emptyList()
+
+        val exception = assertThrows<io.github.krisalord.recommendation.AiProviderException> {
+            service.getRecommendations(fakeUserId, request)
+        }
+
+        assertTrue(exception.message!!.contains("Gemini engine invocation failed with status code: 503"))
+    }
+
+    private fun extractJsonArray(text: String): String {
+        val start = text.indexOf('[')
+        var depth = 0
+        var end = start
+        for (i in start until text.length) {
+            when (text[i]) {
+                '[' -> depth++
+                ']' -> { depth--; if (depth == 0) { end = i; break } }
+            }
+        }
+        return text.substring(start, end + 1)
     }
 }

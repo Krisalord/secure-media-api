@@ -5,14 +5,24 @@ import io.github.krisalord.media.MediaRepository
 import io.github.krisalord.media.WatchedMediaModel
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import java.time.Instant
 import java.util.Locale
 import java.util.UUID
+
+@Serializable
+data class WatchHistoryEntry(
+    val title: String,
+    val mediaType: String,
+    val rating: Int
+)
 
 class RecommendationService(
     private val mediaRepository: MediaRepository,
@@ -45,15 +55,20 @@ class RecommendationService(
         )
     }
 
+    private fun sanitizeTitle(raw: String): String {
+        return raw
+            .replace(Regex("[\u0000-\u001F\u007F]"), "")
+            .trim()
+    }
+
     internal fun buildPrompt(history: List<WatchedMediaModel>, type: PromptType, customInput: String?): String {
-        val serializedHistory = history.joinToString("\n") {
-            "- Title: ${it.title}, Type: ${it.mediaType}, Rating: ${it.rating}/5"
-        }
+        val historyEntries = history.map { WatchHistoryEntry(sanitizeTitle(it.title), it.mediaType, it.rating) }
+        val serializedHistory = jsonParser.encodeToString(historyEntries)
 
         val sanitizedInput = customInput?.replace(Regex("[^a-zA-Z0-9 .,!?'_-]"), "") ?: ""
 
         val systemInstruction = """
-            Analyze this watch history:
+            Analyze this watch history (JSON array):
             $serializedHistory
             
             CRITICAL: You must return ONLY a valid JSON array of exactly 3 objects. 
@@ -75,15 +90,26 @@ class RecommendationService(
     }
 
     private suspend fun executeGeminiRequest(fullPrompt: String): String {
-        val response = httpClient.post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$geminiApiKey") {
-            contentType(ContentType.Application.Json)
-            setBody(
-                GeminiRequest(
-                    contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = fullPrompt)))),
-                    generationConfig = GeminiGenerationConfig()
+        val response = runCatching {
+            httpClient.post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$geminiApiKey") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    GeminiRequest(
+                        contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = fullPrompt)))),
+                        generationConfig = GeminiGenerationConfig()
+                    )
                 )
-            )
-        }
+            }
+        }.onFailure { e ->
+            if (e is HttpRequestTimeoutException) {
+                throw AiProviderException("Request to Gemini provider timed out.")
+            }
+        }.onSuccess { resp ->
+            if (resp.status.value in 500..599) {
+                val errorBody = resp.bodyAsText()
+                throw AiProviderException("Gemini engine invocation failed with status code: ${resp.status}. Details: $errorBody")
+            }
+        }.getOrThrow()
 
         if (!response.status.isSuccess()) {
             val errorBody = response.bodyAsText()
