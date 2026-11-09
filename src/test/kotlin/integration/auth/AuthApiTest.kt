@@ -94,7 +94,7 @@ class AuthApiTest : BaseIntegrationTest() {
 
         val loginResponse = client.post("/api/v1/auth/login") {
             contentType(ContentType.Application.Json)
-            setBody("""{"email": "wrong_pass@example.com", "password": "IncorrectPassword!!!"}""")
+            setBody("""{"email": "wrong_pass@example.com", "password": "IncorrectPassword1!"}""")
         }
 
         assertEquals(HttpStatusCode.Unauthorized, loginResponse.status)
